@@ -138,6 +138,8 @@ body::before {
   padding:2.5rem 3rem 4rem;
   overflow-y:auto;
   max-width:860px;
+  word-wrap:break-word;
+  overflow-x:hidden;
 }
 
 /* Section headings */
@@ -222,6 +224,7 @@ body::before {
 .param-table {
   width:100%;border-collapse:collapse;margin-bottom:1.2rem;
   font-family:'DM Mono',monospace;font-size:0.7rem;
+  display:table;
 }
 .param-table thead th {
   text-align:left;padding:0.4rem 0.7rem;
@@ -250,6 +253,8 @@ pre {
   background:#0a0a0a;border:1px solid var(--dark-line);
   padding:1rem 1.2rem;overflow-x:auto;
   margin-bottom:1.2rem;position:relative;
+  max-width:100%;white-space:pre;
+  -webkit-overflow-scrolling:touch;
 }
 code {
   font-family:'DM Mono',monospace;font-size:0.72rem;
@@ -364,6 +369,82 @@ code {
 .doc-section{animation:fadeIn 0.4s ease both;}
 .doc-section:nth-child(2){animation-delay:0.05s;}
 .doc-section:nth-child(3){animation-delay:0.1s;}
+
+/* ═══════════════════════════
+   MOBILE — warisan-api
+═══════════════════════════ */
+@media (max-width: 900px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .topbar { padding: 0.7rem 1rem; flex-wrap: wrap; gap: 0.5rem; }
+  .topbar-right { flex-wrap: wrap; gap: 0.4rem; }
+  .topbar-link:not(.cta) { display: none; }
+
+  .sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--dark-line);
+    padding: 1rem 0;
+    display: flex;
+    overflow-x: auto;
+    gap: 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar { display: none; }
+  .sidebar-section {
+    flex-shrink: 0;
+    padding: 0 0.8rem;
+    border-right: 1px solid var(--dark-line);
+    margin-bottom: 0;
+  }
+  .sidebar-section:last-child { border-right: none; }
+  .sidebar-label { white-space: nowrap; }
+  .sidebar a { white-space: nowrap; padding: 0.3rem 0.4rem; }
+
+  .main {
+    padding: 1.5rem 1rem 3rem;
+    max-width: 100%;
+  }
+
+  .endpoint-summary { display: none; }
+  .endpoint-path { font-size: 0.7rem; word-break: break-all; }
+
+  pre { padding: 0.8rem; overflow-x: auto; }
+  code { font-size: 0.65rem; }
+
+  .auth-flow { flex-direction: column; }
+  .auth-step { border-right: none; border-bottom: 1px solid var(--dark-line); }
+  .auth-step:last-child { border-bottom: none; }
+
+  .sbt-field { grid-template-columns: 130px 1fr; }
+  .sbt-ftype { display: none; }
+
+  .tier-table, .param-table { font-size: 0.68rem; }
+  .tier-table th, .tier-table td,
+  .param-table thead th, .param-table tbody td { padding: 0.4rem 0.5rem; }
+
+  .error-grid { grid-template-columns: 1fr; }
+  .error-code { border-right: none; border-bottom: 1px solid var(--dark-line); }
+  .error-desc { border-top: none; }
+
+  .topbar-logo { font-size: 1rem; }
+  .topbar-title { font-size: 0.55rem; }
+}
+@media (max-width: 480px) {
+  pre code { font-size: 0.6rem; }
+  .param-table { display: block; overflow-x: auto; }
+  .doc-section-title { font-size: 1.2rem; }
+  .endpoint-path { font-size: 0.62rem; }
+}
+
+.param-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; margin-bottom:1.2rem; }
+.param-table-wrap .param-table { margin-bottom:0; }
 </style>
 </head>
 <body>

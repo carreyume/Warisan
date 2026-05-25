@@ -469,6 +469,16 @@ html[dir="rtl"] .asset-ledger th, html[dir="rtl"] .asset-ledger td { font-family
   <!-- LEFT PANEL -->
   <div class="left-panel">
 
+    <!-- Panel Tabs -->
+    <div class="panel-tabs">
+      <button class="panel-tab active" id="tab-heirs" onclick="switchPanel('heirs')">
+        <span data-t="tab.heirs">Heirs &amp; Distribution</span>
+      </button>
+      <button class="panel-tab" id="tab-assets" onclick="switchPanel('assets')">
+        <span data-t="tab.assets">Asset Ledger</span>
+      </button>
+    </div>
+
     <div class="track-selector" style="margin-bottom:1.5rem;">
       <button class="track-btn syariah active" id="btn-syariah" onclick="setTrack('syariah')">
         <span class="track-icon">☽</span>
@@ -1474,25 +1484,26 @@ function renderResults(estate,result){
 
 
 // ═══════════════════════════════════════════════════════
-// ASSET LEDGER STATE
-// ═══════════════════════════════════════════════════════
-let assets = []; // [{id, name, type, appraised, mode, urgency}]
+
+
+// ═══════════════════════════════════════════
+// ASSET LEDGER ENGINE
+// ═══════════════════════════════════════════
+let assets = [];
 let assetIdCounter = 0;
 let activePanel = 'heirs';
 
 const ASSET_TYPES = ['cash','property','vehicle','shares','business','other'];
 const MODES = ['A','B','C'];
 const DISCOUNT_MAP = {
-  // mode A
   A: { 0:0, 1:0.10, 2:0.20, 3:0.40 },
   B: { 0:0, 1:0.05, 2:0.12, 3:0.20 },
   C: { 0:0.05, 1:0.10, 2:0.15, 3:0.20 },
 };
-// urgency labels
 const URGENCY_LABELS = {
-  en: ['Voluntary (6–12 mo)', 'Court Order (3–6 mo)', 'Forced (< 3 mo)', 'Distress Sale'],
-  ms: ['Sukarela (6–12 bln)', 'Perintah Mahkamah', 'Paksaan (< 3 bln)', 'Jualan Tertekan'],
-  ar: ['طوعي (٦–١٢ شهراً)', 'أمر المحكمة', 'إجباري (< ٣ أشهر)', 'بيع متعثر'],
+  en: ['Voluntary (6–12 mo)','Court Order (3–6 mo)','Forced (< 3 mo)','Distress Sale'],
+  ms: ['Sukarela (6–12 bln)','Perintah Mahkamah','Paksaan (< 3 bln)','Jualan Tertekan'],
+  ar: ['طوعي (٦–١٢ شهراً)','أمر المحكمة','إجباري (< ٣ أشهر)','بيع متعثر'],
 };
 const ASSET_TYPE_LABELS = {
   en: {cash:'Cash / Bank',property:'Property',vehicle:'Vehicle',shares:'Shares / Securities',business:'Business Interest',other:'Other'},
@@ -1507,261 +1518,290 @@ const MODE_LABELS = {
 
 function switchPanel(p) {
   activePanel = p;
-  g('tab-heirs').classList.toggle('active', p==='heirs');
-  g('tab-assets').classList.toggle('active', p==='assets');
+  const tabH = g('tab-heirs'), tabA = g('tab-assets');
+  if(tabH) tabH.classList.toggle('active', p==='heirs');
+  if(tabA) tabA.classList.toggle('active', p==='assets');
 
-  const heirInputs = ['btn-syariah','btn-civil','syariah-inputs','civil-inputs'].concat(
-    ['section-label-estate','estate-input-wrap','heir-sections']
-  );
-  // Simpler: show/hide whole sections
   const trackSel = document.querySelector('.track-selector');
-  const syarahDiv = g('syariah-inputs');
+  const syariahDiv = g('syariah-inputs');
   const civilDiv = g('civil-inputs');
   const estateDiv = g('main-estate-wrap');
   const assetPnl = g('asset-panel');
+  // also hide the static section-label for estate if present
+  const estateLbl = estateDiv && estateDiv.previousElementSibling;
 
-  if(p==='heirs') {
-    if(trackSel) trackSel.style.display='';
-    if(estateDiv) estateDiv.style.display='';
-    // show correct track
-    if(syarahDiv) syarahDiv.style.display = track==='syariah' ? '' : 'none';
-    if(civilDiv) civilDiv.style.display = track==='civil' ? '' : 'none';
-    if(assetPnl) assetPnl.style.display='none';
-    // re-apply section labels visibility
-    document.querySelectorAll('.left-panel > .section-label').forEach(el => el.style.display='');
+  if(p === 'heirs') {
+    if(trackSel) trackSel.style.display = '';
+    if(estateDiv) estateDiv.style.display = '';
+    if(estateLbl && estateLbl.classList.contains('section-label')) estateLbl.style.display = '';
+    if(syariahDiv) syariahDiv.style.display = track === 'syariah' ? '' : 'none';
+    if(civilDiv)   civilDiv.style.display   = track === 'civil'   ? '' : 'none';
+    if(assetPnl)   assetPnl.style.display   = 'none';
   } else {
-    if(trackSel) trackSel.style.display='none';
-    if(syarahDiv) syarahDiv.style.display='none';
-    if(civilDiv) civilDiv.style.display='none';
-    if(estateDiv) estateDiv.style.display='none';
-    if(assetPnl) assetPnl.style.display='';
+    if(trackSel) trackSel.style.display = 'none';
+    if(estateDiv) estateDiv.style.display = 'none';
+    if(estateLbl && estateLbl.classList.contains('section-label')) estateLbl.style.display = 'none';
+    if(syariahDiv) syariahDiv.style.display = 'none';
+    if(civilDiv)   civilDiv.style.display   = 'none';
+    if(assetPnl)   assetPnl.style.display   = '';
     renderAssetList();
   }
-  // hide results when switching panel
-  g('empty-state').style.display='flex';
-  g('results-wrap').style.display='none';
-  lastResult=null;
+  g('empty-state').style.display = 'flex';
+  g('results-wrap').style.display = 'none';
+  lastResult = null;
 }
 
 function addAsset() {
   const id = ++assetIdCounter;
-  assets.push({ id, name:'Asset '+id, type:'property', appraised:0, mode:'A', urgency:0 });
+  assets.push({ id, name: 'Asset ' + id, type: 'property', appraised: 0, mode: 'A', urgency: 0 });
   renderAssetList();
 }
 
 function removeAsset(id) {
-  assets = assets.filter(a=>a.id!==id);
+  assets = assets.filter(function(a){ return a.id !== id; });
   renderAssetList();
 }
 
 function updateAsset(id, field, val) {
-  const a = assets.find(x=>x.id===id);
-  if(a) { a[field] = field==='appraised'||field==='urgency' ? parseFloat(val)||0 : val; }
-  if(field==='mode'||field==='type') renderAssetList();
-  else { const card=document.querySelector('.asset-card[data-id="'+id+'"]'); if(card) card.classList.toggle('active-card', a.appraised>0); }
+  const a = assets.find(function(x){ return x.id === id; });
+  if(!a) return;
+  a[field] = (field === 'appraised' || field === 'urgency') ? (parseFloat(val) || 0) : val;
+  if(field === 'mode' || field === 'type') {
+    renderAssetList();
+  } else {
+    const card = document.querySelector('.asset-card[data-id="' + id + '"]');
+    if(card) card.classList.toggle('active-card', a.appraised > 0);
+  }
 }
 
 function renderAssetList() {
   const list = g('asset-list');
   if(!list) return;
-  if(assets.length===0) {
-    list.innerHTML='<div style="padding:0.8rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(13,13,13,0.25);">'+(lang==='ar'?'لا توجد أصول مضافة':lang==='ms'?'Tiada aset ditambah':'No assets added')+'</div>';
+  if(assets.length === 0) {
+    list.innerHTML = '<div style="padding:0.8rem;text-align:center;font-family:\'DM Mono\',monospace;font-size:0.6rem;color:rgba(13,13,13,0.25);">' +
+      (lang === 'ar' ? 'لا توجد أصول مضافة' : lang === 'ms' ? 'Tiada aset ditambah' : 'No assets added — click + Add Asset below') +
+      '</div>';
     return;
   }
-  const tl = ASSET_TYPE_LABELS[lang]||ASSET_TYPE_LABELS.en;
-  const ml = MODE_LABELS[lang]||MODE_LABELS.en;
-  const ul = URGENCY_LABELS[lang]||URGENCY_LABELS.en;
-  list.innerHTML = assets.map(a => {
-    const showUrgency = a.mode==='A';
-    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
-    const adjVal = a.appraised * (1-disc);
-    return \`<div class="asset-card \${a.appraised>0?'active-card':''}" data-id="\${a.id}">
-      <div class="asset-card-head">
-        <input class="asset-name-input" value="\${a.name}" oninput="updateAsset(\${a.id},'name',this.value)" placeholder="Asset name">
-        <button class="asset-del-btn" onclick="removeAsset(\${a.id})" title="Remove">✕</button>
-      </div>
-      <div class="asset-row2">
-        <div>
-          <div class="asset-field-label">\${lang==='ar'?'النوع':lang==='ms'?'Jenis':'Type'}</div>
-          <select class="asset-select" onchange="updateAsset(\${a.id},'type',this.value)">
-            \${ASSET_TYPES.map(t=>\`<option value="\${t}" \${a.type===t?'selected':''}>\${tl[t]||t}</option>\`).join('')}
-          </select>
-        </div>
-        <div>
-          <div class="asset-field-label">\${lang==='ar'?'القيمة المقدّرة':lang==='ms'?'Nilai Taksiran':'Appraised Value'}</div>
-          <div class="rm-input-wrap" style="border:1px solid var(--line);">
-            <span class="rm-prefix">RM</span>
-            <input type="number" class="asset-val-input" value="\${a.appraised||''}" min="0" step="1000"
-              oninput="updateAsset(\${a.id},'appraised',this.value)" placeholder="0">
-          </div>
-        </div>
-      </div>
-      <div class="asset-row3">
-        <div class="asset-field-label" style="margin-bottom:0.3rem;">\${lang==='ar'?'وضع الحل':lang==='ms'?'Mod Penyelesaian':'Resolution Mode'}</div>
-        <div class="mode-btns">
-          \${MODES.map(m=>\`<button class="mode-btn mode-\${m} \${a.mode===m?'sel':''}"
-            onclick="updateAsset(\${a.id},'mode','\${m}')">\${m}: \${ml[m]}</button>\`).join('')}
-        </div>
-      </div>
-      <div class="asset-urgency-row \${showUrgency?'show':''}">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          <div class="asset-field-label">\${lang==='ar'?'الاستعجال':lang==='ms'?'Keterdesakan':'Sale Urgency'}</div>
-          <span class="discount-note">−\${(disc*100).toFixed(0)}% discount</span>
-        </div>
-        <input type="range" class="urgency-slider" min="0" max="3" step="1" value="\${a.urgency}"
-          oninput="updateAsset(\${a.id},'urgency',this.value)">
-        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.4);">\${ul[a.urgency]||''}</div>
-      </div>
-      \${a.appraised>0?(\`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid var(--line);">
-        <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.35);">\${lang==='ar'?'القيمة المعدّلة':lang==='ms'?'Nilai Terlaras':'Adjusted Value'}</span>
-        <span class="adj-val">\${fmt(adjVal)}</span>
-      </div>\`):''}
-    </div>\`;
-  }).join('');
+  const tl = ASSET_TYPE_LABELS[lang] || ASSET_TYPE_LABELS.en;
+  const ml = MODE_LABELS[lang] || MODE_LABELS.en;
+  const ul = URGENCY_LABELS[lang] || URGENCY_LABELS.en;
+
+  var html = '';
+  for(var i = 0; i < assets.length; i++) {
+    var a = assets[i];
+    var showUrgency = (a.mode === 'A');
+    var disc = (DISCOUNT_MAP[a.mode] && DISCOUNT_MAP[a.mode][a.urgency]) || 0;
+    var adjVal = a.appraised * (1 - disc);
+
+    var typeOptions = '';
+    for(var ti = 0; ti < ASSET_TYPES.length; ti++) {
+      var tv = ASSET_TYPES[ti];
+      typeOptions += '<option value="' + tv + '"' + (a.type === tv ? ' selected' : '') + '>' + (tl[tv] || tv) + '</option>';
+    }
+
+    var modeBtns = '';
+    for(var mi = 0; mi < MODES.length; mi++) {
+      var mv = MODES[mi];
+      modeBtns += '<button class="mode-btn mode-' + mv + (a.mode === mv ? ' sel' : '') + '" onclick="updateAsset(' + a.id + ',\'mode\',\'' + mv + '\')">' + mv + ': ' + (ml[mv] || mv) + '</button>';
+    }
+
+    var adjLine = '';
+    if(a.appraised > 0) {
+      adjLine = '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid var(--line);">' +
+        '<span style="font-family:\'DM Mono\',monospace;font-size:0.58rem;color:rgba(13,13,13,0.35);">' + (lang === 'ar' ? 'القيمة المعدّلة' : lang === 'ms' ? 'Nilai Terlaras' : 'Adjusted Value') + '</span>' +
+        '<span class="adj-val">' + fmt(adjVal) + '</span></div>';
+    }
+
+    html += '<div class="asset-card' + (a.appraised > 0 ? ' active-card' : '') + '" data-id="' + a.id + '">' +
+      '<div class="asset-card-head">' +
+      '<input class="asset-name-input" value="' + a.name.replace(/"/g,'&quot;') + '" oninput="updateAsset(' + a.id + ',\'name\',this.value)" placeholder="' + (lang==='ar'?'اسم الأصل':lang==='ms'?'Nama aset':'Asset name') + '">' +
+      '<button class="asset-del-btn" onclick="removeAsset(' + a.id + ')" title="Remove">✕</button>' +
+      '</div>' +
+      '<div class="asset-row2">' +
+      '<div><div class="asset-field-label">' + (lang==='ar'?'النوع':lang==='ms'?'Jenis':'Type') + '</div>' +
+      '<select class="asset-select" onchange="updateAsset(' + a.id + ',\'type\',this.value)">' + typeOptions + '</select></div>' +
+      '<div><div class="asset-field-label">' + (lang==='ar'?'القيمة المقدّرة':lang==='ms'?'Nilai Taksiran':'Appraised Value') + '</div>' +
+      '<div class="rm-input-wrap" style="border:1px solid var(--line);"><span class="rm-prefix">RM</span>' +
+      '<input type="number" class="asset-val-input" value="' + (a.appraised || '') + '" min="0" step="1000" oninput="updateAsset(' + a.id + ',\'appraised\',this.value)" placeholder="0"></div></div>' +
+      '</div>' +
+      '<div class="asset-row3">' +
+      '<div class="asset-field-label" style="margin-bottom:0.3rem;">' + (lang==='ar'?'وضع الحل':lang==='ms'?'Mod Penyelesaian':'Resolution Mode') + '</div>' +
+      '<div class="mode-btns">' + modeBtns + '</div>' +
+      '</div>' +
+      '<div class="asset-urgency-row' + (showUrgency ? ' show' : '') + '">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+      '<div class="asset-field-label">' + (lang==='ar'?'الاستعجال':lang==='ms'?'Keterdesakan':'Sale Urgency') + '</div>' +
+      '<span class="discount-note">−' + (disc*100).toFixed(0) + '% discount</span>' +
+      '</div>' +
+      '<input type="range" class="urgency-slider" min="0" max="3" step="1" value="' + a.urgency + '" oninput="updateAsset(' + a.id + ',\'urgency\',this.value)">' +
+      '<div style="font-family:\'DM Mono\',monospace;font-size:0.58rem;color:rgba(13,13,13,0.4);">' + (ul[a.urgency] || '') + '</div>' +
+      '</div>' +
+      adjLine +
+      '</div>';
+  }
+  list.innerHTML = html;
 }
 
 function calcNDE() {
-  const liab = parseFloat((g('liabilities-val')||{}).value)||0;
-  const totalGEV = assets.reduce((s,a)=>s+a.appraised,0);
-  const totalAdjusted = assets.reduce((s,a)=>{
-    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
-    return s + a.appraised*(1-disc);
-  },0);
-  const nde = Math.max(0, totalAdjusted - liab);
-  return { liab, totalGEV, totalAdjusted, nde };
+  var liab = parseFloat((g('liabilities-val') || {}).value) || 0;
+  var totalGEV = 0, totalAdjusted = 0;
+  for(var i = 0; i < assets.length; i++) {
+    var a = assets[i];
+    var disc = (DISCOUNT_MAP[a.mode] && DISCOUNT_MAP[a.mode][a.urgency]) || 0;
+    totalGEV += a.appraised;
+    totalAdjusted += a.appraised * (1 - disc);
+  }
+  return { liab: liab, totalGEV: totalGEV, totalAdjusted: totalAdjusted, nde: Math.max(0, totalAdjusted - liab) };
 }
 
 function calculateAssets() {
-  if(assets.length===0) {
-    alert(lang==='ar'?'يُرجى إضافة أصل واحد على الأقل':lang==='ms'?'Sila tambah sekurang-kurangnya satu aset':'Please add at least one asset.');
+  if(assets.length === 0) {
+    alert(lang === 'ar' ? 'يُرجى إضافة أصل واحد على الأقل' : lang === 'ms' ? 'Sila tambah sekurang-kurangnya satu aset' : 'Please add at least one asset.');
     return;
   }
-  const { liab, totalGEV, totalAdjusted, nde } = calcNDE();
-  if(nde<=0) { alert(lang==='ar'?'صافي التركة صفر أو سالب بعد الخصومات.':lang==='ms'?'NDE adalah sifar atau negatif selepas potongan.':'Net distributable estate is zero or negative after deductions.'); return; }
-
-  // Get heirs from faraid/civil engine using NDE as estate value
-  const heirResult = track==='syariah' ? calcFaraid(nde) : calcCivil(nde);
-  lastEstate = nde;
-  lastResult = heirResult;
-  renderIlliquidResults(totalGEV, totalAdjusted, liab, nde, heirResult);
+  var ned = calcNDE();
+  if(ned.nde <= 0) {
+    alert(lang === 'ar' ? 'صافي التركة صفر أو سالب بعد الخصومات.' : lang === 'ms' ? 'NDE adalah sifar atau negatif selepas potongan.' : 'Net Distributable Estate is zero or negative after deductions.');
+    return;
+  }
+  lastEstate = ned.nde;
+  lastResult = track === 'syariah' ? calcFaraid(ned.nde) : calcCivil(ned.nde);
+  renderIlliquidResults(ned.totalGEV, ned.totalAdjusted, ned.liab, ned.nde, lastResult);
 }
 
 function renderIlliquidResults(gev, adjGev, liab, nde, heirResult) {
-  g('empty-state').style.display='none';
-  const wrap = g('results-wrap');
-  wrap.style.display='flex';
-  wrap.innerHTML='';
+  g('empty-state').style.display = 'none';
+  var wrap = g('results-wrap');
+  wrap.style.display = 'flex';
 
-  const tl = ASSET_TYPE_LABELS[lang]||ASSET_TYPE_LABELS.en;
-  const ml = MODE_LABELS[lang]||MODE_LABELS.en;
-  const ul = URGENCY_LABELS[lang]||URGENCY_LABELS.en;
+  var tl = ASSET_TYPE_LABELS[lang] || ASSET_TYPE_LABELS.en;
+  var ml = MODE_LABELS[lang] || MODE_LABELS.en;
+  var ul = URGENCY_LABELS[lang] || URGENCY_LABELS.en;
+  var segColors = ['2a5c45','b8962e','8b3a2a','3a7a5e','a84a38','1a4c35','d4af5a'];
 
-  // Asset ledger table
-  const assetRows = assets.map(a => {
-    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
-    const adjVal = a.appraised*(1-disc);
-    return \`<tr>
-      <td><strong>\${a.name}</strong><br><span class="asset-type-pill \${a.type}">\${tl[a.type]||a.type}</span></td>
-      <td>\${fmt(a.appraised)}</td>
-      <td><span class="mode-pill \${a.mode}">\${a.mode}: \${ml[a.mode]||''}</span>
-          <br><span style="font-family:'DM Mono',monospace;font-size:0.55rem;color:rgba(13,13,13,0.35);">\${ul[a.urgency]||''}</span></td>
-      <td>\${disc>0?\`<span class="discount-note">−\${(disc*100).toFixed(0)}%</span>\`:''}</td>
-      <td>\${fmt(adjVal)}</td>
-    </tr>\`;
-  }).join('');
+  // Asset ledger rows
+  var assetRows = '';
+  var gevBar = '';
+  for(var i = 0; i < assets.length; i++) {
+    var a = assets[i];
+    var disc = (DISCOUNT_MAP[a.mode] && DISCOUNT_MAP[a.mode][a.urgency]) || 0;
+    var adjVal = a.appraised * (1 - disc);
+    var flex = adjGev > 0 ? Math.round(adjVal / adjGev * 1000) : 0;
+    assetRows += '<tr>' +
+      '<td><strong>' + a.name + '</strong><br><span class="asset-type-pill ' + a.type + '">' + (tl[a.type] || a.type) + '</span></td>' +
+      '<td>' + fmt(a.appraised) + '</td>' +
+      '<td><span class="mode-pill ' + a.mode + '">' + a.mode + ': ' + (ml[a.mode] || '') + '</span><br><span style="font-family:\'DM Mono\',monospace;font-size:0.55rem;color:rgba(13,13,13,0.35);">' + (ul[a.urgency] || '') + '</span></td>' +
+      '<td>' + (disc > 0 ? '<span class="discount-note">−' + (disc*100).toFixed(0) + '%</span>' : '—') + '</td>' +
+      '<td>' + fmt(adjVal) + '</td>' +
+      '</tr>';
+    gevBar += '<div class="gev-seg" style="flex:' + flex + ';background:#' + segColors[i % segColors.length] + ';" title="' + a.name + ': ' + fmt(adjVal) + '">' + (flex > 80 ? a.name.slice(0,5) : '') + '</div>';
+  }
 
-  // Visual bar — proportion of each asset
-  const segColors2 = ['2a5c45','b8962e','8b3a2a','3a7a5e','a84a38','1a4c35','d4af5a'];
-  const gevBar = assets.map((a,i) => {
-    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
-    const adjVal = a.appraised*(1-disc);
-    const flex = adjGev>0 ? Math.round(adjVal/adjGev*1000) : 0;
-    return \`<div class="gev-seg" style="flex:\${flex};background:#\${segColors2[i%segColors2.length]};" title="\${a.name}: \${fmt(adjVal)}">\${flex>100?a.name.slice(0,6):''}</div>\`;
-  }).join('');
+  // Heir entitlement rows
+  var entRows = '';
+  for(var hi = 0; hi < heirResult.rows.length; hi++) {
+    var r = heirResult.rows[hi];
+    var breakdown = '';
+    for(var ai = 0; ai < assets.length; ai++) {
+      var aa = assets[ai];
+      var ddisc = (DISCOUNT_MAP[aa.mode] && DISCOUNT_MAP[aa.mode][aa.urgency]) || 0;
+      var aVal = aa.appraised * (1 - ddisc);
+      var hShare = aVal * r.shareVal;
+      if(hShare > 0.01) {
+        if(breakdown) breakdown += ' · ';
+        breakdown += aa.name + ' (' + aa.mode + ') → ' + fmt(hShare);
+      }
+    }
+    entRows += '<div class="entitlement-row' + (r.shareVal > 0 ? ' active-card' : '') + '">' +
+      '<div style="display:grid;grid-template-columns:1fr auto;align-items:start;gap:0.5rem;">' +
+      '<div>' +
+      '<div class="entitlement-heir">' + r.label + (r.count > 1 ? ' ×' + r.count : '') + '</div>' +
+      '<div class="entitlement-frac">' + r.fracStr + ' — ' + (r.shareVal*100).toFixed(2) + '%</div>' +
+      '<div class="entitlement-breakdown" style="margin-top:0.3rem;">' + (breakdown || '—') + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;">' +
+      '<div class="entitlement-total">' + fmt(r.totalAmount) + '</div>' +
+      (r.count > 1 ? '<div style="font-family:\'DM Mono\',monospace;font-size:0.58rem;color:rgba(13,13,13,0.35);">' + fmt(r.perPerson) + ' ' + t('result.each') + '</div>' : '') +
+      '<div class="entitlement-sbt">SBT</div>' +
+      '</div></div></div>';
+  }
 
-  // Heir entitlements per asset
-  const heirEntitlements = heirResult.rows.map(r => {
-    const perAsset = assets.map(a => {
-      const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
-      const adjVal = a.appraised*(1-disc);
-      const heirShare = adjVal * r.shareVal;
-      return { name:a.name, mode:a.mode, type:a.type, amount:heirShare };
-    });
-    const totalEntitlement = r.totalAmount; // already computed from NDE
-    return { label:r.label, count:r.count, fracStr:r.fracStr, shareVal:r.shareVal,
-             perPerson:r.perPerson, total:totalEntitlement, perAsset };
-  });
+  var lbl = lang === 'ar', lms = lang === 'ms';
+  var trackBadge = heirResult.track === 'syariah' ? t('result.syariah.badge') : t('result.civil.badge');
+  var trackColor = heirResult.track === 'syariah' ? 'jade' : 'rust';
 
-  const entitlementRows = heirEntitlements.map(h => {
-    const breakdown = h.perAsset.filter(a=>a.amount>0.01).map(a=>
-      \`\${a.name} (\${a.mode}) → \${fmt(a.amount)}\`
-    ).join(' · ');
-    return \`<div class="entitlement-row \${h.shareVal>0?'active-card':''}">
-      <div style="display:grid;grid-template-columns:1fr auto;align-items:start;gap:0.5rem;">
-        <div>
-          <div class="entitlement-heir">\${h.label}\${h.count>1?' ×'+h.count:''}</div>
-          <div class="entitlement-frac">\${h.fracStr} — \${(h.shareVal*100).toFixed(2)}%</div>
-          <div class="entitlement-breakdown" style="margin-top:0.3rem;">\${breakdown||'—'}</div>
-        </div>
-        <div style="text-align:right;">
-          <div class="entitlement-total">\${fmt(h.total)}</div>
-          \${h.count>1?\`<div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.35);">\${fmt(h.perPerson)} each</div>\`:''}
-          <div class="entitlement-sbt">SBT</div>
-        </div>
-      </div>
-    </div>\`;
-  }).join('');
+  var blockedHTML = (heirResult.blocked && heirResult.blocked.length > 0)
+    ? '<div class="info-box"><p><strong>' + t('blocked.title') + '</strong> ' + t('blocked.note') + ' <em>' + heirResult.blocked.join('; ') + '</em>.</p><div class="rule-cite">' + t('blocked.rule') + '</div></div>'
+    : '';
+  var warningsHTML = heirResult.warnings.map(function(w){ return '<div class="info-box warn"><p>' + w + '</p></div>'; }).join('');
 
-  const trackBadge = heirResult.track==='syariah'?t('result.syariah.badge'):t('result.civil.badge');
-  const trackColor = heirResult.track==='syariah'?'jade':'rust';
+  wrap.innerHTML =
+    '<div class="result-header">' +
+      '<div>' +
+        '<span class="result-track-badge ' + trackColor + '">' + trackBadge + '</span>' +
+        '<div style="font-family:\'DM Mono\',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.35);margin-top:0.5rem;">' + (lbl ? 'تقييم الأصول' : lms ? 'Penilaian Aset' : 'Asset Ledger Mode') + '</div>' +
+      '</div>' +
+      '<div class="result-timestamp">' + new Date().toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'}) + '<br><span style="color:var(--gold);font-size:0.55rem;">' + t('result.indicative') + '</span></div>' +
+    '</div>' +
 
-  wrap.innerHTML = \`
-    <div class="result-header">
-      <div>
-        <span class="result-track-badge \${trackColor}">\${trackBadge}</span>
-        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.35);margin-top:0.5rem;">\${lang==='ar'?'تقييم الأصول':lang==='ms'?'Penilaian Aset':'Asset Ledger Mode'}</div>
-      </div>
-      <div class="result-timestamp">\${new Date().toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'})}<br><span style="color:var(--gold);font-size:0.55rem;">\${t('result.indicative')}</span></div>
-    </div>
+    '<div>' +
+      '<div class="dist-section-title">' + (lbl ? 'سجل الأصول' : lms ? 'Senarai Aset' : 'Asset Ledger') + '</div>' +
+      '<div class="gev-bar">' + gevBar + '</div>' +
+      '<table class="asset-ledger"><thead><tr>' +
+        '<th>' + (lbl ? 'الأصل' : lms ? 'Aset' : 'Asset') + '</th>' +
+        '<th>' + (lbl ? 'القيمة المقدّرة' : lms ? 'Nilai Taksiran' : 'Appraised') + '</th>' +
+        '<th>' + (lbl ? 'وضع الحل' : lms ? 'Mod' : 'Mode') + '</th>' +
+        '<th>' + (lbl ? 'الخصم' : lms ? 'Diskaun' : 'Discount') + '</th>' +
+        '<th>' + (lbl ? 'القيمة المعدّلة' : lms ? 'Nilai Terlaras' : 'Adjusted') + '</th>' +
+      '</tr></thead><tbody>' + assetRows + '</tbody></table>' +
+    '</div>' +
 
-    <div>
-      <div class="dist-section-title">\${lang==='ar'?'سجل الأصول':lang==='ms'?'Senarai Aset':'Asset Ledger'}</div>
-      <div class="gev-bar">\${gevBar}</div>
-      <table class="asset-ledger">
-        <thead><tr>
-          <th>\${lang==='ar'?'الأصل':lang==='ms'?'Aset':'Asset'}</th>
-          <th>\${lang==='ar'?'القيمة المقدّرة':lang==='ms'?'Nilai Taksiran':'Appraised'}</th>
-          <th>\${lang==='ar'?'وضع الحل':lang==='ms'?'Mod':'Mode'}</th>
-          <th>\${lang==='ar'?'الخصم':lang==='ms'?'Diskaun':'Discount'}</th>
-          <th>\${lang==='ar'?'القيمة المعدّلة':lang==='ms'?'Nilai Terlaras':'Adjusted'}</th>
-        </tr></thead>
-        <tbody>\${assetRows}</tbody>
-      </table>
-    </div>
+    '<div class="summary-equation">' +
+      '<div class="eq-line"><span class="eq-label">' + (lbl ? 'إجمالي قيمة التركة (GEV)' : lms ? 'Jumlah Nilai Kasar (GEV)' : 'Gross Estate Value (GEV)') + '</span>  <span class="eq-val">' + fmt(gev) + '</span></div>' +
+      '<div class="eq-line"><span class="eq-label">' + (lbl ? 'بعد خصم السيولة' : lms ? 'Selepas Diskaun Kecairan' : 'After Liquidity Discounts') + '</span>  <span class="eq-val">' + fmt(adjGev) + '</span></div>' +
+      '<div class="eq-line"><span class="eq-label">− ' + (lbl ? 'الديون + مصاريف الجنازة' : lms ? 'Hutang + Kos' : 'Debts + Funeral + Admin') + '</span>  <span class="eq-val" style="color:var(--rust);">' + fmt(liab) + '</span></div>' +
+      '<div style="border-top:1px solid rgba(184,150,46,0.2);margin:0.5rem 0;"></div>' +
+      '<div class="eq-line"><span class="eq-label">' + (lbl ? 'صافي التركة القابل للتوزيع (NDE)' : lms ? 'Harta Bersih Boleh Agih (NDE)' : 'Net Distributable Estate (NDE)') + '</span></div>' +
+      '<div class="eq-result">' + fmtShort(nde) + '</div>' +
+    '</div>' +
 
-    <div class="summary-equation">
-      <div class="eq-line"><span class="eq-label">\${lang==='ar'?'إجمالي قيمة التركة (GEV)':lang==='ms'?'Jumlah Nilai Kasar (GEV)':'Gross Estate Value (GEV)'}</span>  <span class="eq-val">\${fmt(gev)}</span></div>
-      <div class="eq-line"><span class="eq-label">\${lang==='ar'?'بعد خصم السيولة':lang==='ms'?'Selepas Diskaun Kecairan':'After Liquidity Discounts'}</span>  <span class="eq-val">\${fmt(adjGev)}</span></div>
-      <div class="eq-line"><span class="eq-label">− \${lang==='ar'?'الديون + مصاريف الجنازة':lang==='ms'?'Hutang + Kos':' Debts + Funeral + Admin'}</span>  <span class="eq-val" style="color:var(--rust);">\${fmt(liab)}</span></div>
-      <div style="border-top:1px solid rgba(184,150,46,0.2);margin:0.5rem 0;"></div>
-      <div class="eq-line"><span class="eq-label">\${lang==='ar'?'صافي التركة القابل للتوزيع (NDE)':lang==='ms'?'Harta Bersih Boleh Agih (NDE)':'Net Distributable Estate (NDE)'}</span></div>
-      <div class="eq-result">\${fmtShort(nde)}</div>
-    </div>
+    '<div class="entitlement-section">' +
+      '<div class="dist-section-title">' + (lbl ? 'استحقاقات الورثة' : lms ? 'Hak Waris' : 'Heir Entitlements') + '</div>' +
+      entRows +
+    '</div>' +
 
-    <div class="entitlement-section">
-      <div class="dist-section-title">\${lang==='ar'?'استحقاقات الورثة':lang==='ms'?'Hak Waris':'Heir Entitlements'}</div>
-      \${entitlementRows}
-    </div>
+    blockedHTML + warningsHTML +
 
-    \${heirResult.blocked&&heirResult.blocked.length>0?\`<div class="info-box"><p><strong>\${t('blocked.title')}</strong> \${t('blocked.note')} <em>\${heirResult.blocked.join('; ')}</em>.</p><div class="rule-cite">\${t('blocked.rule')}</div></div>\`:''}
-    \${heirResult.warnings.map(w=>\`<div class="info-box warn"><p>\${w}</p></div>\`).join('')}
-
-    <div class="info-box">
-      <p><strong>\${t('disclaimer.title')}</strong> \${t('disclaimer.text')}</p>
-      <div class="rule-cite">\${heirResult.track==='syariah'?t('disclaimer.rule.syariah'):t('disclaimer.rule.civil')}</div>
-    </div>
-  \`;
+    '<div class="info-box"><p><strong>' + t('disclaimer.title') + '</strong> ' + t('disclaimer.text') + '</p>' +
+    '<div class="rule-cite">' + (heirResult.track === 'syariah' ? t('disclaimer.rule.syariah') : t('disclaimer.rule.civil')) + '</div></div>';
 }
+
+// ── PATCHED: calculate delegates to asset engine when in asset panel ──
+var _origCalculate = calculate;
+calculate = function() {
+  if(activePanel === 'assets') { calculateAssets(); return; }
+  _origCalculate();
+};
+
+// ── PATCHED: resetAll clears assets too ──
+var _origReset = resetAll;
+resetAll = function() {
+  _origReset();
+  assets = [];
+  assetIdCounter = 0;
+  var al = g('asset-list');
+  if(al) al.innerHTML = '';
+  var lv = g('liabilities-val');
+  if(lv) lv.value = '';
+};
+
+// ── PATCHED: setLang re-renders asset list if active ──
+var _origSetLang = setLang;
+setLang = function(l) {
+  _origSetLang(l);
+  if(activePanel === 'assets') renderAssetList();
+};
 
 // ── INIT ──
 setLang('en');

@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warisan API — Developer Reference</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0d0d;
+  --parchment: #f5f0e8;
+  --gold: #b8962e;
+  --gold-light: #d4af5a;
+  --gold-pale: #f0e4c0;
+  --gold-faint: rgba(184,150,46,0.07);
+  --jade: #2a5c45;
+  --jade-light: #3a7a5e;
+  --rust: #8b3a2a;
+  --mist: #e8e4dc;
+  --line: rgba(184,150,46,0.18);
+  --dark: #0f0f0f;
+  --dark-card: #161616;
+  --dark-mid: #1e1e1e;
+  --dark-line: #2a2a2a;
+  --white: #ffffff;
+  --code-bg: #111111;
+  --GET: #2a5c45;
+  --POST: #b8962e;
+  --PUT: #1a4a7a;
+  --DELETE: #8b3a2a;
+  --PATCH: #5a3a7a;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body {
+  background:var(--dark);
+  color:#d4cfc6;
+  font-family:'Libre Baskerville',Georgia,serif;
+  overflow-x:hidden;
+  display:grid;
+  grid-template-columns:260px 1fr;
+  grid-template-rows:auto 1fr;
+  min-height:100vh;
+}
+
+body::before {
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.5;
+}
+
+/* ── TOPBAR ── */
+.topbar {
+  grid-column:1/-1;
+  background:var(--dark);
+  border-bottom:1px solid var(--dark-line);
+  padding:0.9rem 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.topbar-left {
+  display:flex;align-items:center;gap:1.2rem;
+}
+.topbar-logo {
+  font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;
+  letter-spacing:0.08em;color:#f5f0e8;text-decoration:none;
+}
+.topbar-sep {
+  width:1px;height:18px;background:var(--dark-line);
+}
+.topbar-title {
+  font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--gold);
+}
+.topbar-version {
+  font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;
+  color:rgba(212,207,198,0.3);padding:0.2rem 0.5rem;
+  border:1px solid var(--dark-line);margin-left:0.5rem;
+}
+.topbar-right {
+  display:flex;align-items:center;gap:0.8rem;
+}
+.topbar-link {
+  font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(212,207,198,0.4);text-decoration:none;
+  transition:color 0.2s;
+}
+.topbar-link:hover{color:var(--gold);}
+.topbar-link.cta {
+  color:var(--gold);border:1px solid var(--gold);padding:0.3rem 0.75rem;
+  transition:all 0.2s;
+}
+.topbar-link.cta:hover{background:var(--gold);color:var(--dark);}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background:var(--dark-card);
+  border-right:1px solid var(--dark-line);
+  padding:1.8rem 0;
+  overflow-y:auto;
+  position:sticky;
+  top:44px;
+  height:calc(100vh - 44px);
+}
+.sidebar-section {
+  padding:0 1.2rem;
+  margin-bottom:1.5rem;
+}
+.sidebar-label {
+  font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--gold);padding:0 0.2rem;
+  margin-bottom:0.5rem;display:block;
+  border-bottom:1px solid var(--dark-line);padding-bottom:0.4rem;
+}
+.sidebar a {
+  display:flex;align-items:center;gap:0.5rem;
+  padding:0.38rem 0.5rem;font-family:'DM Mono',monospace;
+  font-size:0.62rem;letter-spacing:0.04em;
+  color:rgba(212,207,198,0.5);text-decoration:none;
+  border-radius:2px;transition:all 0.15s;
+}
+.sidebar a:hover{color:#d4cfc6;background:rgba(255,255,255,0.04);}
+.sidebar a.active{color:var(--gold);background:var(--gold-faint);}
+.sidebar a .method-badge {
+  font-size:0.5rem;padding:0.08rem 0.3rem;border-radius:1px;
+  font-weight:500;letter-spacing:0.05em;flex-shrink:0;color:#fff;
+}
+.sidebar a .method-badge.GET    { background:var(--GET); }
+.sidebar a .method-badge.POST   { background:var(--POST); }
+.sidebar a .method-badge.PUT    { background:var(--PUT); }
+.sidebar a .method-badge.DELETE { background:var(--DELETE); }
+.sidebar a .method-badge.PATCH  { background:var(--PATCH); }
+
+/* ── MAIN CONTENT ── */
+.main {
+  padding:2.5rem 3rem 4rem;
+  overflow-y:auto;
+  max-width:860px;
+}
+
+/* Section headings */
+.doc-section {
+  margin-bottom:3.5rem;
+  scroll-margin-top:60px;
+}
+.doc-section-title {
+  font-family:'Playfair Display',serif;
+  font-size:1.6rem;font-weight:700;
+  color:#f5f0e8;
+  margin-bottom:0.5rem;
+  padding-bottom:0.7rem;
+  border-bottom:1px solid var(--dark-line);
+}
+.doc-section-intro {
+  font-size:0.88rem;color:rgba(212,207,198,0.6);
+  line-height:1.85;margin-bottom:1.5rem;
+  font-style:italic;
+}
+.doc-group-label {
+  font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.2em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:1rem;
+  display:block;
+}
+
+/* Endpoint card */
+.endpoint {
+  border:1px solid var(--dark-line);
+  margin-bottom:1.5rem;
+  scroll-margin-top:60px;
+  overflow:hidden;
+}
+.endpoint-header {
+  display:flex;align-items:center;gap:0.8rem;
+  padding:0.9rem 1.2rem;
+  background:var(--dark-mid);
+  cursor:pointer;
+  transition:background 0.15s;
+  user-select:none;
+}
+.endpoint-header:hover{background:#222;}
+.method {
+  font-family:'DM Mono',monospace;font-size:0.65rem;font-weight:500;
+  padding:0.22rem 0.55rem;letter-spacing:0.08em;
+  flex-shrink:0;color:#fff;
+}
+.method.GET    { background:var(--GET); }
+.method.POST   { background:var(--POST); }
+.method.PUT    { background:var(--PUT); }
+.method.DELETE { background:var(--DELETE); }
+.method.PATCH  { background:var(--PATCH); }
+.endpoint-path {
+  font-family:'DM Mono',monospace;font-size:0.78rem;
+  color:#f5f0e8;letter-spacing:0.02em;flex:1;
+}
+.endpoint-path .path-param{color:var(--gold-light);}
+.endpoint-summary {
+  font-size:0.78rem;color:rgba(212,207,198,0.4);
+  margin-left:auto;text-align:right;
+  max-width:200px;
+  font-family:'DM Mono',monospace;font-size:0.6rem;
+}
+.endpoint-chevron {
+  color:rgba(212,207,198,0.25);font-size:0.6rem;transition:transform 0.2s;flex-shrink:0;
+}
+.endpoint.open .endpoint-chevron{transform:rotate(180deg);}
+
+.endpoint-body {
+  display:none;padding:1.4rem 1.5rem;
+  border-top:1px solid var(--dark-line);
+  background:var(--code-bg);
+}
+.endpoint.open .endpoint-body{display:block;}
+
+.endpoint-desc {
+  font-size:0.85rem;line-height:1.75;
+  color:rgba(212,207,198,0.65);margin-bottom:1.2rem;
+}
+
+/* Params / body tables */
+.param-table {
+  width:100%;border-collapse:collapse;margin-bottom:1.2rem;
+  font-family:'DM Mono',monospace;font-size:0.7rem;
+}
+.param-table thead th {
+  text-align:left;padding:0.4rem 0.7rem;
+  font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;
+  color:rgba(212,207,198,0.3);border-bottom:1px solid var(--dark-line);
+  font-weight:400;
+}
+.param-table tbody td {
+  padding:0.55rem 0.7rem;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  vertical-align:top;
+}
+.param-name { color:var(--gold-light); }
+.param-type { color:#93c5fd;font-size:0.62rem; }
+.param-req  { color:var(--rust);font-size:0.58rem; }
+.param-opt  { color:rgba(212,207,198,0.25);font-size:0.58rem; }
+.param-desc { color:rgba(212,207,198,0.55);font-size:0.68rem;line-height:1.6; }
+
+/* Code blocks */
+.code-label {
+  font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.12em;
+  text-transform:uppercase;color:rgba(212,207,198,0.3);
+  margin-bottom:0.4rem;display:block;
+}
+pre {
+  background:#0a0a0a;border:1px solid var(--dark-line);
+  padding:1rem 1.2rem;overflow-x:auto;
+  margin-bottom:1.2rem;position:relative;
+}
+code {
+  font-family:'DM Mono',monospace;font-size:0.72rem;
+  line-height:1.7;color:#d4cfc6;
+}
+.copy-btn {
+  position:absolute;top:0.5rem;right:0.6rem;
+  font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;
+  text-transform:uppercase;padding:0.2rem 0.5rem;
+  border:1px solid var(--dark-line);background:transparent;
+  color:rgba(212,207,198,0.3);cursor:pointer;transition:all 0.15s;
+}
+.copy-btn:hover{color:var(--gold);border-color:var(--gold);}
+.copy-btn.copied{color:var(--jade);border-color:var(--jade);}
+
+/* Syntax highlight */
+.kw   { color:#c792ea; }
+.str  { color:#c3e88d; }
+.num  { color:#f78c6c; }
+.key  { color:var(--gold-light); }
+.cmt  { color:#546e7a;font-style:italic; }
+.bool { color:#89ddff; }
+.url  { color:#82aaff; }
+
+/* Response status badges */
+.status-list{display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;}
+.status-badge{
+  font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.06em;
+  padding:0.22rem 0.6rem;border:1px solid;
+}
+.status-badge.s2{color:#4ade80;border-color:rgba(74,222,128,0.3);}
+.status-badge.s4{color:#fbbf24;border-color:rgba(251,191,36,0.3);}
+.status-badge.s5{color:#f87171;border-color:rgba(248,113,113,0.3);}
+
+/* Info box */
+.info-callout {
+  padding:0.9rem 1.1rem;border-left:3px solid var(--gold);
+  background:var(--gold-faint);margin-bottom:1.2rem;
+}
+.info-callout.warn{border-left-color:var(--rust);background:rgba(139,58,42,0.06);}
+.info-callout.jade{border-left-color:var(--jade);background:rgba(42,92,69,0.06);}
+.info-callout p{font-size:0.8rem;line-height:1.7;color:rgba(212,207,198,0.7);}
+.info-callout strong{color:#d4cfc6;}
+
+/* Auth header */
+.auth-flow {
+  display:flex;align-items:stretch;gap:0;
+  margin-bottom:1.2rem;border:1px solid var(--dark-line);
+}
+.auth-step {
+  flex:1;padding:0.9rem 1rem;
+  border-right:1px solid var(--dark-line);
+}
+.auth-step:last-child{border-right:none;}
+.auth-step-num{font-family:'DM Mono',monospace;font-size:0.55rem;color:var(--gold);letter-spacing:0.1em;margin-bottom:0.3rem;}
+.auth-step-title{font-size:0.82rem;font-weight:700;color:#d4cfc6;margin-bottom:0.2rem;}
+.auth-step-desc{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(212,207,198,0.4);line-height:1.5;}
+
+/* Rate limit table */
+.tier-table{width:100%;border-collapse:collapse;font-size:0.78rem;margin-bottom:1.2rem;}
+.tier-table th{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(212,207,198,0.3);padding:0.5rem 0.8rem;text-align:left;border-bottom:1px solid var(--dark-line);font-weight:400;}
+.tier-table td{padding:0.6rem 0.8rem;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top;}
+.tier-name{font-weight:700;color:#d4cfc6;}
+.tier-gold{color:var(--gold);}
+.tier-jade{color:#4ade80;}
+
+/* Error codes */
+.error-grid{display:grid;grid-template-columns:auto 1fr;gap:0;}
+.error-row{display:contents;}
+.error-code{
+  font-family:'DM Mono',monospace;font-size:0.7rem;padding:0.55rem 0.9rem;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  border-right:1px solid var(--dark-line);
+  background:var(--dark-mid);color:var(--rust);
+  display:flex;align-items:center;white-space:nowrap;
+}
+.error-desc{
+  font-size:0.78rem;padding:0.55rem 0.9rem;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  color:rgba(212,207,198,0.55);line-height:1.5;
+  display:flex;align-items:center;
+}
+
+/* Changelog */
+.changelog-item{display:grid;grid-template-columns:auto 1fr;gap:1rem;padding:0.7rem 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.changelog-date{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(212,207,198,0.3);white-space:nowrap;padding-top:0.05rem;}
+.changelog-text{font-size:0.8rem;color:rgba(212,207,198,0.6);line-height:1.6;}
+.changelog-tag{display:inline-block;font-family:'DM Mono',monospace;font-size:0.52rem;padding:0.08rem 0.35rem;margin-right:0.3rem;border-radius:1px;}
+.changelog-tag.new{background:rgba(42,92,69,0.3);color:#4ade80;}
+.changelog-tag.fix{background:rgba(184,150,46,0.15);color:var(--gold-light);}
+.changelog-tag.break{background:rgba(139,58,42,0.25);color:#fca5a5;}
+
+/* SBT schema visual */
+.sbt-schema{border:1px solid var(--dark-line);background:var(--dark-mid);overflow:hidden;}
+.sbt-schema-head{padding:0.6rem 1rem;background:#0a0a0a;border-bottom:1px solid var(--dark-line);display:flex;align-items:center;gap:0.5rem;}
+.sbt-schema-dot{width:8px;height:8px;border-radius:50%;}
+.sbt-schema-name{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--gold);}
+.sbt-schema-body{padding:1rem;}
+.sbt-field{display:grid;grid-template-columns:160px auto 1fr;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.sbt-field:last-child{border-bottom:none;}
+.sbt-fname{font-family:'DM Mono',monospace;font-size:0.68rem;color:var(--gold-light);}
+.sbt-ftype{font-family:'DM Mono',monospace;font-size:0.62rem;color:#93c5fd;}
+.sbt-fdesc{font-family:'DM Mono',monospace;font-size:0.62rem;color:rgba(212,207,198,0.35);}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--dark-line);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:var(--gold);}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.doc-section{animation:fadeIn 0.4s ease both;}
+.doc-section:nth-child(2){animation-delay:0.05s;}
+.doc-section:nth-child(3){animation-delay:0.1s;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="warisan-concept.html" class="topbar-logo">WARISAN</a>
+    <div class="topbar-sep"></div>
+    <span class="topbar-title">API Reference</span>
+    <span class="topbar-version">v1.0-beta</span>
+  </div>
+  <div class="topbar-right">
+    <a href="warisan-concept.html" class="topbar-link">System Concept</a>
+    <a href="warisan-calculator.html" class="topbar-link">Calculator</a>
+    <a href="mailto:api@warisan.com.my" class="topbar-link cta">Request Access →</a>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Getting Started</span>
+    <a href="#overview">Overview</a>
+    <a href="#authentication">Authentication</a>
+    <a href="#base-url">Base URL & Versioning</a>
+    <a href="#rate-limits">Rate Limits</a>
+    <a href="#errors">Error Codes</a>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Identity Layer</span>
+    <a href="#identity-verify"><span class="method-badge POST">POST</span>Verify Identity</a>
+    <a href="#identity-death"><span class="method-badge POST">POST</span>Death Certificate</a>
+    <a href="#identity-status"><span class="method-badge GET">GET</span>Identity Status</a>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Estate Management</span>
+    <a href="#estate-create"><span class="method-badge POST">POST</span>Create Estate</a>
+    <a href="#estate-get"><span class="method-badge GET">GET</span>Get Estate</a>
+    <a href="#estate-state"><span class="method-badge PATCH">PATCH</span>Advance State</a>
+    <a href="#estate-list"><span class="method-badge GET">GET</span>List Estates</a>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Asset Registry</span>
+    <a href="#asset-register"><span class="method-badge POST">POST</span>Register Asset</a>
+    <a href="#asset-query-ar"><span class="method-badge GET">GET</span>Query AR Holdings</a>
+    <a href="#asset-list"><span class="method-badge GET">GET</span>List Assets</a>
+    <a href="#asset-value"><span class="method-badge PUT">PUT</span>Update Valuation</a>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Distribution Engine</span>
+    <a href="#dist-calculate"><span class="method-badge POST">POST</span>Calculate Faraid</a>
+    <a href="#dist-civil"><span class="method-badge POST">POST</span>Calculate Civil</a>
+    <a href="#dist-nde"><span class="method-badge POST">POST</span>Compute NDE</a>
+    <a href="#dist-confirm"><span class="method-badge POST">POST</span>Confirm Distribution</a>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Settlement (SBT)</span>
+    <a href="#sbt-issue"><span class="method-badge POST">POST</span>Issue SBT</a>
+    <a href="#sbt-verify"><span class="method-badge GET">GET</span>Verify SBT</a>
+    <a href="#sbt-schema">SBT Schema</a>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Institutional API</span>
+    <a href="#inst-push"><span class="method-badge POST">POST</span>Push Unresolved Case</a>
+    <a href="#inst-webhook">Webhooks</a>
+    <a href="#inst-fi-verify"><span class="method-badge GET">GET</span>FI SBT Verification</a>
+  </div>
+
+  <div class="sidebar-section">
+    <span class="sidebar-label">Reference</span>
+    <a href="#enums">Enums & Constants</a>
+    <a href="#changelog">Changelog</a>
+  </div>
+
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ═══════════════════════════════════════
+  OVERVIEW
+════════════════════════════════════════ -->
+<div class="doc-section" id="overview">
+  <h2 class="doc-section-title">Overview</h2>
+  <p class="doc-section-intro">The Warisan API is a REST interface for integrating with the Warisan estate resolution infrastructure. It exposes endpoints across six layers: identity verification, estate state machine management, asset registry, distribution calculation (Faraid & civil), SBT settlement issuance, and institutional case ingestion.</p>
+
+  <div class="info-callout jade">
+    <p><strong>Beta notice.</strong> This API is in pre-production beta. Endpoints are stable but schema fields may be extended. All breaking changes are versioned and announced 30 days in advance. Use version prefix <code>/v1/</code> for all requests.</p>
+  </div>
+
+  <span class="doc-group-label">Core Concepts</span>
+  <div class="auth-flow">
+    <div class="auth-step">
+      <div class="auth-step-num">01 — ESTATE</div>
+      <div class="auth-step-title">Estate Object</div>
+      <div class="auth-step-desc">Central record. Holds state, heirs, assets, track (Syariah/Civil), and proof hashes.</div>
+    </div>
+    <div class="auth-step">
+      <div class="auth-step-num">02 — STATE MACHINE</div>
+      <div class="auth-step-title">Lifecycle</div>
+      <div class="auth-step-desc">PENDING → IDENTITY_VERIFIED → ASSET_MAPPED → [ARBITRATION] → SETTLEMENT_ISSUED → DISTRIBUTED</div>
+    </div>
+    <div class="auth-step">
+      <div class="auth-step-num">03 — SBT</div>
+      <div class="auth-step-title">Settlement Token</div>
+      <div class="auth-step-desc">Soulbound Token minted per heir on settlement. Non-transferable. Ethereum-anchored. FI-verifiable.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  AUTHENTICATION
+════════════════════════════════════════ -->
+<div class="doc-section" id="authentication">
+  <h2 class="doc-section-title">Authentication</h2>
+  <p class="doc-section-intro">All API requests require Bearer token authentication. Tokens are institution-scoped — each partner organisation receives a unique token with defined permission scopes.</p>
+
+  <span class="doc-group-label">API Key Header</span>
+  <div style="position:relative;">
+    <pre><code><span class="kw">Authorization</span>: Bearer <span class="str">wrs_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span class="kw">Content-Type</span>: application/json
+<span class="kw">X-Warisan-Institution</span>: <span class="str">YOUR_INSTITUTION_ID</span></code></pre>
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  </div>
+
+  <span class="doc-group-label">Token Types</span>
+  <table class="tier-table">
+    <thead><tr><th>Prefix</th><th>Environment</th><th>Usage</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tier-gold">wrs_live_</span></td><td>Production</td><td>Real estate cases, live SBT issuance</td></tr>
+      <tr><td><span class="param-type">wrs_test_</span></td><td>Sandbox</td><td>Test cases, dummy SBTs, no blockchain writes</td></tr>
+      <tr><td><span class="param-type">wrs_ar_</span></td><td>AR Integration</td><td>Amanah Raya node — elevated query permissions</td></tr>
+      <tr><td><span class="param-type">wrs_fi_</span></td><td>FI Verification</td><td>Read-only SBT verification for financial institutions</td></tr>
+    </tbody>
+  </table>
+
+  <div class="info-callout warn">
+    <p><strong>Security.</strong> API keys must never be exposed client-side. All production calls must originate from your server. Keys are rotatable via the Warisan Partner Portal. Compromised keys should be revoked immediately.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  BASE URL
+════════════════════════════════════════ -->
+<div class="doc-section" id="base-url">
+  <h2 class="doc-section-title">Base URL & Versioning</h2>
+  <div style="position:relative;">
+    <pre><code><span class="cmt"># Production</span>
+<span class="url">https://api.warisan.com.my/v1</span>
+
+<span class="cmt"># Sandbox</span>
+<span class="url">https://sandbox.api.warisan.com.my/v1</span></code></pre>
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  </div>
+  <p style="font-size:0.82rem;color:rgba(212,207,198,0.55);line-height:1.7;">All responses return JSON. Dates use ISO 8601 (<code>2025-01-15T10:30:00Z</code>). Currency amounts are in Malaysian Ringgit (MYR) as integers in sen (1 MYR = 100 sen) to avoid floating-point errors.</p>
+</div>
+
+<!-- ═══════════════════════════════════════
+  RATE LIMITS
+════════════════════════════════════════ -->
+<div class="doc-section" id="rate-limits">
+  <h2 class="doc-section-title">Rate Limits</h2>
+  <table class="tier-table">
+    <thead><tr><th>Tier</th><th>Requests/min</th><th>Requests/day</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tier-name">Pilot</span></td><td>30</td><td>1,000</td><td>90-day AR sprint partners</td></tr>
+      <tr><td><span class="tier-name">Standard</span></td><td>120</td><td>10,000</td><td>FI integration tier</td></tr>
+      <tr><td><span class="tier-name tier-gold">Enterprise</span></td><td>600</td><td>Unlimited</td><td>Amanah Raya, bulk processing</td></tr>
+    </tbody>
+  </table>
+  <p style="font-size:0.82rem;color:rgba(212,207,198,0.45);line-height:1.7;">Rate limit headers are returned on every response: <code>X-RateLimit-Remaining</code>, <code>X-RateLimit-Reset</code>. Exceeding limits returns HTTP 429 with a <code>Retry-After</code> header.</p>
+</div>
+
+<!-- ═══════════════════════════════════════
+  ERRORS
+════════════════════════════════════════ -->
+<div class="doc-section" id="errors">
+  <h2 class="doc-section-title">Error Codes</h2>
+  <p class="doc-section-intro">All errors return a consistent JSON envelope with a machine-readable <code>code</code> and a human-readable <code>message</code>.</p>
+  <div style="position:relative;margin-bottom:1.2rem;">
+    <pre><code>{
+  <span class="key">"error"</span>: {
+    <span class="key">"code"</span>:    <span class="str">"HAJB_BLOCKED"</span>,
+    <span class="key">"message"</span>: <span class="str">"Heir is blocked (Hajb Hirman) by a higher-priority relative."</span>,
+    <span class="key">"details"</span>: { <span class="key">"blocked_heir_id"</span>: <span class="str">"heir_abc123"</span>, <span class="key">"blocked_by"</span>: <span class="str">"heir_def456"</span> }
+  }
+}</code></pre>
+    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+  </div>
+  <div class="error-grid">
+    <div class="error-code">INVALID_IC</div><div class="error-desc">IC number format invalid or not found in JPN registry</div>
+    <div class="error-code">DEATH_NOT_CONFIRMED</div><div class="error-desc">Death certificate not yet confirmed via JPN API</div>
+    <div class="error-code">ESTATE_STATE_INVALID</div><div class="error-desc">Requested state transition is not valid from current state</div>
+    <div class="error-code">ASSET_ALREADY_MAPPED</div><div class="error-desc">Asset UUID already registered to a different estate</div>
+    <div class="error-code">HAJB_BLOCKED</div><div class="error-desc">Heir is blocked (Hajb Hirman) by a higher-priority relative</div>
+    <div class="error-code">FARAID_OVERFLOW</div><div class="error-desc">Fixed shares exceed 1.0 — estate configuration is invalid</div>
+    <div class="error-code">TRACK_MISMATCH</div><div class="error-desc">Requested operation is not available on the estate's track (Syariah/Civil)</div>
+    <div class="error-code">SBT_ALREADY_ISSUED</div><div class="error-desc">SBT has already been issued for this heir on this estate</div>
+    <div class="error-code">NDE_NEGATIVE</div><div class="error-desc">Net Distributable Estate is zero or negative after deductions</div>
+    <div class="error-code">MIXED_RELIGION_ESCALATE</div><div class="error-desc">Mixed-religion estate requires human adjudicator — auto-escalated</div>
+    <div class="error-code">UNAUTHORIZED</div><div class="error-desc">API key missing, invalid, or insufficient scope for this operation</div>
+    <div class="error-code">RATE_LIMITED</div><div class="error-desc">Request rate exceeded — see Retry-After header</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  IDENTITY LAYER
+════════════════════════════════════════ -->
+<div class="doc-section" id="identity-verify">
+  <h2 class="doc-section-title">Identity Layer</h2>
+  <p class="doc-section-intro">All heirs and the deceased must be identity-verified before an estate can advance. Identity hashes are stored off-chain; only a cryptographic proof-of-inclusion is written to the consortium chain.</p>
+
+  <!-- POST /identity/verify -->
+  <div class="endpoint open" id="identity-verify">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/identity/verify</span>
+      <span class="endpoint-summary">Verify heir or deceased identity</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Submits identity details for verification against the JPN (Jabatan Pendaftaran Negara) registry. Returns a <code>credential_hash</code> that is stored on the consortium chain as proof-of-inclusion without exposing the raw IC data.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">ic_number</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">12-digit Malaysian IC number (YYMMDDSSNNNG)</td></tr>
+          <tr><td class="param-name">full_name</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Full legal name as per IC</td></tr>
+          <tr><td class="param-name">role</td><td class="param-type">enum</td><td class="param-req">required</td><td class="param-desc"><code>DECEASED</code> | <code>HEIR</code> | <code>REPRESENTATIVE</code></td></tr>
+          <tr><td class="param-name">religion</td><td class="param-type">enum</td><td class="param-req">required</td><td class="param-desc"><code>ISLAM</code> | <code>CHRISTIAN</code> | <code>BUDDHIST</code> | <code>HINDU</code> | <code>OTHER</code></td></tr>
+          <tr><td class="param-name">liveness_token</td><td class="param-type">string</td><td class="param-opt">optional</td><td class="param-desc">Token from biometric liveness SDK (required for HEIR role in production)</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Response 200</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"identity_id"</span>:       <span class="str">"idn_7x9k2m4p"</span>,
+  <span class="key">"credential_hash"</span>:   <span class="str">"0x3a8f...c4b2"</span>,
+  <span class="key">"status"</span>:            <span class="str">"VERIFIED"</span>,
+  <span class="key">"religion"</span>:          <span class="str">"ISLAM"</span>,
+  <span class="key">"track_suggestion"</span>:  <span class="str">"SYARIAH"</span>,
+  <span class="key">"verified_at"</span>:       <span class="str">"2025-03-12T08:44:00Z"</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <div class="status-list">
+        <span class="status-badge s2">200 Verified</span>
+        <span class="status-badge s4">400 Invalid IC format</span>
+        <span class="status-badge s4">404 IC not found in JPN</span>
+        <span class="status-badge s5">503 JPN API unavailable</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST /identity/death-certificate -->
+  <div class="endpoint" id="identity-death">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/identity/death-certificate</span>
+      <span class="endpoint-summary">Register and confirm death</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Registers a death certificate and triggers JPN confirmation. This is a prerequisite before an estate can be created. The JPN confirmation may be asynchronous — poll <code>GET /identity/{id}</code> or listen on the <code>identity.death_confirmed</code> webhook.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">identity_id</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Identity ID of the deceased (from <code>/identity/verify</code>)</td></tr>
+          <tr><td class="param-name">death_cert_no</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Official death certificate number (JPN format)</td></tr>
+          <tr><td class="param-name">date_of_death</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">ISO 8601 date (<code>2025-01-10</code>)</td></tr>
+          <tr><td class="param-name">place_of_death</td><td class="param-type">string</td><td class="param-opt">optional</td><td class="param-desc">Hospital, city, or country</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Response 200</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"identity_id"</span>:       <span class="str">"idn_7x9k2m4p"</span>,
+  <span class="key">"death_status"</span>:      <span class="str">"PENDING_JPN_CONFIRMATION"</span>,
+  <span class="key">"death_cert_hash"</span>:   <span class="str">"0xf7b1...22e9"</span>,
+  <span class="key">"jpn_case_ref"</span>:      <span class="str">"JPN-2025-0382941"</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /identity/:id -->
+  <div class="endpoint" id="identity-status">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/identity/<span class="path-param">{identity_id}</span></span>
+      <span class="endpoint-summary">Get identity & death status</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Returns the current verification status of an identity record, including JPN confirmation status for deceased individuals.</p>
+      <div class="status-list">
+        <span class="status-badge s2">200 OK</span>
+        <span class="status-badge s4">404 Identity not found</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  ESTATE MANAGEMENT
+════════════════════════════════════════ -->
+<div class="doc-section" id="estate-create">
+  <h2 class="doc-section-title">Estate Management</h2>
+  <p class="doc-section-intro">The estate is the central object in Warisan. It progresses through a strict state machine. State transitions can only move forward and cannot be skipped.</p>
+
+  <!-- POST /estates -->
+  <div class="endpoint open" id="estate-create">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/estates</span>
+      <span class="endpoint-summary">Create a new estate</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Creates a new estate record. The deceased must already have a confirmed death certificate (<code>DEATH_CONFIRMED</code> status). The estate is created in <code>PENDING_VERIFICATION</code> state.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">deceased_identity_id</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Identity ID of the deceased with confirmed death</td></tr>
+          <tr><td class="param-name">track</td><td class="param-type">enum</td><td class="param-req">required</td><td class="param-desc"><code>SYARIAH</code> | <code>CIVIL</code>. Typically derived from deceased's religion.</td></tr>
+          <tr><td class="param-name">heir_identity_ids</td><td class="param-type">string[]</td><td class="param-req">required</td><td class="param-desc">Array of identity IDs for all known heirs (min 1)</td></tr>
+          <tr><td class="param-name">deceased_gender</td><td class="param-type">enum</td><td class="param-req">required</td><td class="param-desc"><code>MALE</code> | <code>FEMALE</code>. Required for Faraid calculation.</td></tr>
+          <tr><td class="param-name">external_ref</td><td class="param-type">string</td><td class="param-opt">optional</td><td class="param-desc">Your internal reference ID (e.g. AR case number, bank account ID)</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Response 201</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"estate_id"</span>:    <span class="str">"est_m3k9p7xr"</span>,
+  <span class="key">"state"</span>:        <span class="str">"PENDING_VERIFICATION"</span>,
+  <span class="key">"track"</span>:        <span class="str">"SYARIAH"</span>,
+  <span class="key">"ipfs_hash"</span>:    <span class="bool">null</span>,
+  <span class="key">"on_chain_id"</span>:  <span class="bool">null</span>,
+  <span class="key">"filed_at"</span>:     <span class="str">"2025-03-15T09:00:00Z"</span>,
+  <span class="key">"heirs"</span>: [
+    { <span class="key">"identity_id"</span>: <span class="str">"idn_a1b2c3"</span>, <span class="key">"status"</span>: <span class="str">"PENDING"</span> }
+  ]
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /estates/:id -->
+  <div class="endpoint" id="estate-get">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/estates/<span class="path-param">{estate_id}</span></span>
+      <span class="endpoint-summary">Get full estate record</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Returns the full estate record including current state, all heirs, all assets, distribution result (if computed), and settlement SBT references (if issued).</p>
+      <div class="status-list">
+        <span class="status-badge s2">200 OK</span>
+        <span class="status-badge s4">404 Estate not found</span>
+        <span class="status-badge s4">403 Insufficient scope to view this estate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PATCH /estates/:id/state -->
+  <div class="endpoint" id="estate-state">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method PATCH">PATCH</span>
+      <span class="endpoint-path">/estates/<span class="path-param">{estate_id}</span>/state</span>
+      <span class="endpoint-summary">Advance estate state</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Advances the estate to the next state. The system validates all prerequisites before allowing the transition. For example, advancing from <code>ASSET_MAPPED</code> to <code>SETTLEMENT_ISSUED</code> requires a confirmed distribution calculation.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">target_state</td><td class="param-type">enum</td><td class="param-req">required</td><td class="param-desc">Target state. Must be the immediate next state.</td></tr>
+          <tr><td class="param-name">notes</td><td class="param-type">string</td><td class="param-opt">optional</td><td class="param-desc">Operator notes attached to this transition (immutable once written)</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Valid Transitions</span>
+      <div style="position:relative;">
+        <pre><code>PENDING_VERIFICATION  → IDENTITY_VERIFIED
+IDENTITY_VERIFIED     → ASSET_MAPPED
+ASSET_MAPPED          → ARBITRATION        <span class="cmt">(if dispute flag set)</span>
+ASSET_MAPPED          → SETTLEMENT_ISSUED  <span class="cmt">(undisputed path)</span>
+ARBITRATION           → SETTLEMENT_ISSUED  <span class="cmt">(after arbitrator resolution)</span>
+SETTLEMENT_ISSUED     → DISTRIBUTED</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /estates -->
+  <div class="endpoint" id="estate-list">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/estates</span>
+      <span class="endpoint-summary">List estates (paginated)</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Returns a paginated list of estates scoped to your institution. Supports filtering by state, track, and date range.</p>
+      <span class="code-label">Query Parameters</span>
+      <table class="param-table">
+        <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">state</td><td class="param-type">enum</td><td class="param-desc">Filter by estate state</td></tr>
+          <tr><td class="param-name">track</td><td class="param-type">enum</td><td class="param-desc"><code>SYARIAH</code> | <code>CIVIL</code></td></tr>
+          <tr><td class="param-name">from</td><td class="param-type">date</td><td class="param-desc">Filed on or after (ISO 8601)</td></tr>
+          <tr><td class="param-name">limit</td><td class="param-type">integer</td><td class="param-desc">Max results per page (default 20, max 100)</td></tr>
+          <tr><td class="param-name">cursor</td><td class="param-type">string</td><td class="param-desc">Pagination cursor from previous response</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  ASSET REGISTRY
+════════════════════════════════════════ -->
+<div class="doc-section" id="asset-register">
+  <h2 class="doc-section-title">Asset Registry</h2>
+  <p class="doc-section-intro">Assets must be declared and mapped to an estate before distribution can be calculated. Each asset is assigned a UUID and linked to the estate's on-chain record. Supports all asset classes including illiquid assets with resolution mode assignment.</p>
+
+  <!-- POST /estates/:id/assets -->
+  <div class="endpoint open" id="asset-register">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/estates/<span class="path-param">{estate_id}</span>/assets</span>
+      <span class="endpoint-summary">Register an asset</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Registers a new asset against the estate. For illiquid assets, specify <code>resolution_mode</code> and <code>urgency</code> to enable liquidity discount calculation in the NDE computation.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">name</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Human-readable asset name</td></tr>
+          <tr><td class="param-name">asset_type</td><td class="param-type">enum</td><td class="param-req">required</td><td class="param-desc"><code>CASH</code> | <code>PROPERTY</code> | <code>VEHICLE</code> | <code>SHARES</code> | <code>BUSINESS</code> | <code>OTHER</code></td></tr>
+          <tr><td class="param-name">appraised_value_sen</td><td class="param-type">integer</td><td class="param-req">required</td><td class="param-desc">Appraised value in Malaysian sen (e.g. 50000000 = RM 500,000)</td></tr>
+          <tr><td class="param-name">resolution_mode</td><td class="param-type">enum</td><td class="param-opt">optional</td><td class="param-desc"><code>A</code> (Collective Sale) | <code>B</code> (Buyout) | <code>C</code> (Co-ownership / Musya')</td></tr>
+          <tr><td class="param-name">urgency</td><td class="param-type">integer</td><td class="param-opt">optional</td><td class="param-desc">Sale urgency 0–3. 0=Voluntary, 1=Court Order, 2=Forced, 3=Distress. Used for liquidity discount.</td></tr>
+          <tr><td class="param-name">external_ref</td><td class="param-type">string</td><td class="param-opt">optional</td><td class="param-desc">Land title, vehicle reg, company reg, share cert number</td></tr>
+          <tr><td class="param-name">valuation_source</td><td class="param-type">string</td><td class="param-opt">optional</td><td class="param-desc">Name of licensed valuer, auditor, or appraiser</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Response 201</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"asset_id"</span>:              <span class="str">"ast_k2p8n4xm"</span>,
+  <span class="key">"estate_id"</span>:             <span class="str">"est_m3k9p7xr"</span>,
+  <span class="key">"asset_type"</span>:            <span class="str">"PROPERTY"</span>,
+  <span class="key">"appraised_value_sen"</span>:   <span class="num">50000000</span>,
+  <span class="key">"resolution_mode"</span>:       <span class="str">"A"</span>,
+  <span class="key">"urgency"</span>:               <span class="num">0</span>,
+  <span class="key">"liquidity_discount"</span>:    <span class="num">0.00</span>,
+  <span class="key">"adjusted_value_sen"</span>:    <span class="num">50000000</span>,
+  <span class="key">"on_chain_uuid"</span>:         <span class="str">"0xa3f1...8b4c"</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /ar/query -->
+  <div class="endpoint" id="asset-query-ar">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/ar/query?ic=<span class="path-param">{ic_number}</span></span>
+      <span class="endpoint-summary">Query Amanah Raya holdings</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Queries the Amanah Raya asset database for unclaimed holdings linked to the given IC number. Requires <code>wrs_ar_</code> or <code>wrs_live_</code> token with <code>ar:read</code> scope. Returns a list of AR case numbers and asset summaries — not full asset values, which require a separate AR confirmation flow.</p>
+      <div class="info-callout">
+        <p><strong>AR partnership required.</strong> This endpoint is only active for institutions operating under the Amanah Raya integration agreement. Sandbox mode returns synthetic test data.</p>
+      </div>
+      <span class="code-label">Response 200</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"ic_number"</span>:  <span class="str">"820315XXXXXX"</span>,
+  <span class="key">"ar_holdings"</span>: [
+    {
+      <span class="key">"ar_case_ref"</span>:   <span class="str">"AR-2019-082341"</span>,
+      <span class="key">"asset_type"</span>:    <span class="str">"CASH"</span>,
+      <span class="key">"status"</span>:        <span class="str">"UNCLAIMED"</span>,
+      <span class="key">"est_value_band"</span>: <span class="str">"RM 10,000 – RM 50,000"</span>
+    }
+  ]
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PUT /estates/:id/assets/:asset_id -->
+  <div class="endpoint" id="asset-value">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method PUT">PUT</span>
+      <span class="endpoint-path">/estates/<span class="path-param">{estate_id}</span>/assets/<span class="path-param">{asset_id}</span></span>
+      <span class="endpoint-summary">Update valuation or resolution mode</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Updates the appraised value, resolution mode, or urgency of an asset. Only permitted while the estate is in <code>IDENTITY_VERIFIED</code> or <code>ASSET_MAPPED</code> state. Each update is recorded as an immutable audit event.</p>
+      <div class="status-list">
+        <span class="status-badge s2">200 Updated</span>
+        <span class="status-badge s4">409 Estate state does not permit asset updates</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  DISTRIBUTION ENGINE
+════════════════════════════════════════ -->
+<div class="doc-section" id="dist-calculate">
+  <h2 class="doc-section-title">Distribution Engine</h2>
+  <p class="doc-section-intro">The distribution engine applies Faraid rules (Quran 4:11–12, 4:176, Shafi'i school) for the Syariah track, or Distribution Act 1958 for the civil track. Both engines output heir shares as basis points and calculated amounts.</p>
+
+  <!-- POST /distribution/faraid -->
+  <div class="endpoint open" id="dist-calculate">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/distribution/faraid</span>
+      <span class="endpoint-summary">Calculate Faraid distribution</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Computes the Faraid distribution for a Syariah-track estate. Automatically applies Hajb (blocking) rules and identifies Asabah (residuary) heirs. Returns the full distribution matrix including blocked heirs and Bayt al-Mal residue if applicable.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">estate_id</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Estate must be in <code>ASSET_MAPPED</code> state</td></tr>
+          <tr><td class="param-name">heir_matrix</td><td class="param-type">object</td><td class="param-req">required</td><td class="param-desc">Heir relationship counts (see schema below)</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">heir_matrix Schema</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"husband"</span>:          <span class="num">0</span>,   <span class="cmt">// Max 1 (if deceased is female)</span>
+  <span class="key">"wives"</span>:            <span class="num">1</span>,   <span class="cmt">// Max 4 (if deceased is male)</span>
+  <span class="key">"sons"</span>:             <span class="num">2</span>,
+  <span class="key">"daughters"</span>:        <span class="num">1</span>,
+  <span class="key">"father"</span>:           <span class="num">1</span>,   <span class="cmt">// Max 1</span>
+  <span class="key">"mother"</span>:           <span class="num">1</span>,   <span class="cmt">// Max 1</span>
+  <span class="key">"full_brothers"</span>:    <span class="num">0</span>,
+  <span class="key">"full_sisters"</span>:     <span class="num">0</span>,
+  <span class="key">"paternal_gf"</span>:      <span class="num">0</span>,   <span class="cmt">// Paternal grandfather</span>
+  <span class="key">"maternal_gm"</span>:      <span class="num">0</span>    <span class="cmt">// Maternal grandmother</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+      <span class="code-label">Response 200</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"estate_id"</span>:  <span class="str">"est_m3k9p7xr"</span>,
+  <span class="key">"nde_sen"</span>:    <span class="num">48000000</span>,
+  <span class="key">"heirs"</span>: [
+    {
+      <span class="key">"role"</span>:          <span class="str">"WIFE"</span>,
+      <span class="key">"count"</span>:         <span class="num">1</span>,
+      <span class="key">"fraction"</span>:      <span class="str">"1/8"</span>,
+      <span class="key">"share_bps"</span>:     <span class="num">1250</span>,
+      <span class="key">"total_sen"</span>:     <span class="num">6000000</span>,
+      <span class="key">"per_person_sen"</span>:<span class="num">6000000</span>,
+      <span class="key">"basis"</span>:         <span class="str">"1/8 — descendants exist"</span>,
+      <span class="key">"type"</span>:          <span class="str">"FIXED"</span>
+    },
+    {
+      <span class="key">"role"</span>:          <span class="str">"SON"</span>,
+      <span class="key">"count"</span>:         <span class="num">2</span>,
+      <span class="key">"fraction"</span>:      <span class="str">"residue"</span>,
+      <span class="key">"share_bps"</span>:     <span class="num">5833</span>,
+      <span class="key">"total_sen"</span>:     <span class="num">28000000</span>,
+      <span class="key">"per_person_sen"</span>:<span class="num">14000000</span>,
+      <span class="key">"basis"</span>:         <span class="str">"Asabah — 2x unit"</span>,
+      <span class="key">"type"</span>:          <span class="str">"RESIDUARY"</span>
+    }
+  ],
+  <span class="key">"blocked_heirs"</span>: [],
+  <span class="key">"total_allocated_bps"</span>: <span class="num">10000</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST /distribution/nde -->
+  <div class="endpoint" id="dist-nde">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/distribution/nde</span>
+      <span class="endpoint-summary">Compute Net Distributable Estate</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Computes the Net Distributable Estate (NDE) from all registered assets. Applies liquidity discounts based on each asset's resolution mode and urgency, then deducts liabilities. The resulting NDE is the basis for all distribution calculations.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">estate_id</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Estate ID with assets registered</td></tr>
+          <tr><td class="param-name">liabilities_sen</td><td class="param-type">integer</td><td class="param-req">required</td><td class="param-desc">Total debts + funeral + admin costs in sen</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Response 200</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"gev_sen"</span>:        <span class="num">60000000</span>,  <span class="cmt">// Gross Estate Value</span>
+  <span class="key">"adj_gev_sen"</span>:    <span class="num">55500000</span>,  <span class="cmt">// After liquidity discounts</span>
+  <span class="key">"liabilities_sen"</span>:<span class="num">7500000</span>,   <span class="cmt">// Debts + costs</span>
+  <span class="key">"nde_sen"</span>:        <span class="num">48000000</span>,  <span class="cmt">// Net Distributable Estate</span>
+  <span class="key">"assets_breakdown"</span>: [
+    {
+      <span class="key">"asset_id"</span>:          <span class="str">"ast_k2p8n4xm"</span>,
+      <span class="key">"appraised_sen"</span>:     <span class="num">50000000</span>,
+      <span class="key">"discount_rate"</span>:     <span class="num">0.10</span>,
+      <span class="key">"adjusted_sen"</span>:      <span class="num">45000000</span>,
+      <span class="key">"resolution_mode"</span>:   <span class="str">"A"</span>
+    }
+  ]
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- POST /distribution/confirm -->
+  <div class="endpoint" id="dist-confirm">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/distribution/confirm</span>
+      <span class="endpoint-summary">Confirm and lock distribution</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Locks the distribution calculation to the estate record. This is an irreversible action that writes the distribution to the consortium chain and is a prerequisite for SBT issuance. All heirs with <code>HEIR</code> role must have <code>VERIFIED</code> identity status before confirmation is permitted.</p>
+      <div class="status-list">
+        <span class="status-badge s2">200 Confirmed — distribution locked</span>
+        <span class="status-badge s4">409 Unverified heirs exist</span>
+        <span class="status-badge s4">409 Distribution already confirmed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  SBT
+════════════════════════════════════════ -->
+<div class="doc-section" id="sbt-issue">
+  <h2 class="doc-section-title">Settlement (SBT)</h2>
+  <p class="doc-section-intro">Settlement Soulbound Tokens are issued per heir after distribution is confirmed. Each SBT is non-transferable, anchored to Ethereum mainnet via Merkle proof, and accepted by Warisan partner FIs as proof of beneficial interest for collateralised financing.</p>
+
+  <!-- POST /sbt/issue -->
+  <div class="endpoint open" id="sbt-issue">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/sbt/issue</span>
+      <span class="endpoint-summary">Issue Settlement SBT</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Issues a Settlement SBT for a specific heir on a confirmed estate. The SBT is minted on the Warisan consortium chain and simultaneously anchored to Ethereum mainnet via OpenTimestamps Merkle proof. The process is asynchronous — poll <code>GET /sbt/{sbt_id}</code> or listen on the <code>sbt.issued</code> webhook.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">estate_id</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Estate must be in <code>SETTLEMENT_ISSUED</code> state</td></tr>
+          <tr><td class="param-name">heir_identity_id</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Identity ID of the heir receiving the SBT</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Response 202 Accepted</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"sbt_id"</span>:          <span class="str">"sbt_p9x3k7mn"</span>,
+  <span class="key">"status"</span>:          <span class="str">"MINTING"</span>,
+  <span class="key">"estate_id"</span>:       <span class="str">"est_m3k9p7xr"</span>,
+  <span class="key">"heir_identity_id"</span>:<span class="str">"idn_a1b2c3"</span>,
+  <span class="key">"share_bps"</span>:       <span class="num">1250</span>,
+  <span class="key">"check_url"</span>:       <span class="url">"/v1/sbt/sbt_p9x3k7mn"</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GET /sbt/:id -->
+  <div class="endpoint" id="sbt-verify">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/sbt/<span class="path-param">{sbt_id}</span></span>
+      <span class="endpoint-summary">Verify SBT (FI endpoint)</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Returns the full SBT record including Ethereum anchor proof, IPFS hash, and heir entitlement breakdown per asset. This is the primary endpoint used by partner financial institutions to verify an heir's SBT before extending financing. Accessible with <code>wrs_fi_</code> read-only tokens.</p>
+      <span class="code-label">Response 200</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"sbt_id"</span>:          <span class="str">"sbt_p9x3k7mn"</span>,
+  <span class="key">"status"</span>:          <span class="str">"ISSUED"</span>,
+  <span class="key">"transferable"</span>:    <span class="bool">false</span>,
+  <span class="key">"share_bps"</span>:       <span class="num">1250</span>,
+  <span class="key">"nde_sen"</span>:         <span class="num">48000000</span>,
+  <span class="key">"heir_amount_sen"</span>: <span class="num">6000000</span>,
+  <span class="key">"issued_at"</span>:       <span class="str">"2025-03-22T14:30:00Z"</span>,
+  <span class="key">"ethereum_anchor"</span>: <span class="str">"0x7f3c...a8d1"</span>,
+  <span class="key">"ipfs_hash"</span>:       <span class="str">"QmXz...kP9"</span>,
+  <span class="key">"jpn_attestation"</span>: <span class="str">"JPN-SIG-2025-0384"</span>,
+  <span class="key">"last_validated_at"</span>:<span class="str">"2026-03-22T00:00:00Z"</span>,
+  <span class="key">"asset_entitlements"</span>: [
+    {
+      <span class="key">"asset_id"</span>:        <span class="str">"ast_k2p8n4xm"</span>,
+      <span class="key">"asset_type"</span>:      <span class="str">"PROPERTY"</span>,
+      <span class="key">"resolution_mode"</span>: <span class="str">"A"</span>,
+      <span class="key">"entitlement_sen"</span>: <span class="num">5625000</span>
+    }
+  ],
+  <span class="key">"fi_collateral_note"</span>: {
+    <span class="key">"max_ltv_pct"</span>:    <span class="num">85</span>,    <span class="cmt">// Mode A/B resolved; 40-60 if Mode C</span>
+    <span class="key">"collateral_type"</span>:<span class="str">"BENEFICIAL_INTEREST"</span>
+  }
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SBT Schema -->
+  <div class="doc-section" id="sbt-schema" style="margin-bottom:0;">
+    <span class="doc-group-label">SBT On-Chain Schema</span>
+    <div class="sbt-schema">
+      <div class="sbt-schema-head">
+        <div class="sbt-schema-dot" style="background:#b8962e;"></div>
+        <div class="sbt-schema-dot" style="background:#2a5c45;margin-left:4px;"></div>
+        <div class="sbt-schema-dot" style="background:#8b3a2a;margin-left:4px;"></div>
+        <span class="sbt-schema-name" style="margin-left:0.8rem;">SettlementSBT</span>
+      </div>
+      <div class="sbt-schema-body">
+        <div class="sbt-field"><span class="sbt-fname">sbt_id</span><span class="sbt-ftype">bytes32</span><span class="sbt-fdesc">Unique identifier, hash(estate_id + heir_address)</span></div>
+        <div class="sbt-field"><span class="sbt-fname">estate_id</span><span class="sbt-ftype">bytes32</span><span class="sbt-fdesc">Parent estate on consortium chain</span></div>
+        <div class="sbt-field"><span class="sbt-fname">heir_address</span><span class="sbt-ftype">address</span><span class="sbt-fdesc">Heir's wallet address on consortium chain</span></div>
+        <div class="sbt-field"><span class="sbt-fname">share_bps</span><span class="sbt-ftype">uint256</span><span class="sbt-fdesc">Ownership in basis points (10000 = 100%)</span></div>
+        <div class="sbt-field"><span class="sbt-fname">transferable</span><span class="sbt-ftype">bool</span><span class="sbt-fdesc">Always false — Soulbound, non-transferable</span></div>
+        <div class="sbt-field"><span class="sbt-fname">resolution_modes</span><span class="sbt-ftype">bytes</span><span class="sbt-fdesc">Encoded resolution mode per asset (A|B|C)</span></div>
+        <div class="sbt-field"><span class="sbt-fname">sunset_trigger_date</span><span class="sbt-ftype">uint256</span><span class="sbt-fdesc">Unix timestamp — Mode C compulsory sale trigger</span></div>
+        <div class="sbt-field"><span class="sbt-fname">ipfs_bundle_cid</span><span class="sbt-ftype">bytes32</span><span class="sbt-fdesc">IPFS CID of full estate document bundle</span></div>
+        <div class="sbt-field"><span class="sbt-fname">ethereum_anchor</span><span class="sbt-ftype">bytes32</span><span class="sbt-fdesc">Ethereum tx hash of Merkle root anchor</span></div>
+        <div class="sbt-field"><span class="sbt-fname">jpn_sig</span><span class="sbt-ftype">bytes</span><span class="sbt-fdesc">JPN digital signature of estate record</span></div>
+        <div class="sbt-field"><span class="sbt-fname">issued_at</span><span class="sbt-ftype">uint256</span><span class="sbt-fdesc">Unix timestamp of issuance — immutable</span></div>
+        <div class="sbt-field"><span class="sbt-fname">last_validated_at</span><span class="sbt-ftype">uint256</span><span class="sbt-fdesc">Annual re-attestation timestamp</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  INSTITUTIONAL API
+════════════════════════════════════════ -->
+<div class="doc-section" id="inst-push">
+  <h2 class="doc-section-title">Institutional API</h2>
+  <p class="doc-section-intro">The Institutional API allows partner organisations — banks, EPF, Bursa, insurers — to push unresolved estate cases to Warisan for resolution. Warisan resolves the estate and returns a settlement hash and SBT references via webhook.</p>
+
+  <!-- POST /institutional/cases -->
+  <div class="endpoint open" id="inst-push">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method POST">POST</span>
+      <span class="endpoint-path">/institutional/cases</span>
+      <span class="endpoint-summary">Push unresolved case</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Submits an unresolved estate case from a partner institution. Warisan creates an estate record, triggers identity verification, and notifies the institution via webhook at each state transition.</p>
+      <span class="code-label">Request Body</span>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="param-name">institution_case_ref</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">Your internal case / account / policy reference</td></tr>
+          <tr><td class="param-name">deceased_ic</td><td class="param-type">string</td><td class="param-req">required</td><td class="param-desc">IC number of the deceased account/policy holder</td></tr>
+          <tr><td class="param-name">asset_type</td><td class="param-type">enum</td><td class="param-req">required</td><td class="param-desc"><code>BANK_ACCOUNT</code> | <code>EPF_BALANCE</code> | <code>SHARES</code> | <code>INSURANCE_POLICY</code> | <code>OTHER</code></td></tr>
+          <tr><td class="param-name">asset_value_sen</td><td class="param-type">integer</td><td class="param-req">required</td><td class="param-desc">Current balance / surrender value in sen</td></tr>
+          <tr><td class="param-name">known_heirs</td><td class="param-type">object[]</td><td class="param-opt">optional</td><td class="param-desc">Array of <code>{ic_number, name, relationship}</code> if known</td></tr>
+          <tr><td class="param-name">webhook_url</td><td class="param-type">string</td><td class="param-opt">optional</td><td class="param-desc">Override your account-level webhook URL for this case</td></tr>
+        </tbody>
+      </table>
+      <span class="code-label">Response 202</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"warisan_case_id"</span>:      <span class="str">"wcase_n8m3k2px"</span>,
+  <span class="key">"institution_case_ref"</span>: <span class="str">"ACC-2024-089234"</span>,
+  <span class="key">"estate_id"</span>:            <span class="str">"est_m3k9p7xr"</span>,
+  <span class="key">"status"</span>:               <span class="str">"INTAKE"</span>,
+  <span class="key">"estimated_resolution"</span>: <span class="str">"21-30 days"</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEBHOOKS -->
+  <div class="doc-section" id="inst-webhook" style="margin-top:1.5rem;margin-bottom:1rem;">
+    <span class="doc-group-label">Webhooks</span>
+    <p style="font-size:0.85rem;color:rgba(212,207,198,0.6);line-height:1.75;margin-bottom:1rem;">Warisan posts a JSON payload to your registered webhook URL on every estate state transition. Verify authenticity with the <code>X-Warisan-Signature</code> header (HMAC-SHA256 of the raw body using your webhook secret).</p>
+    <table class="param-table">
+      <thead><tr><th>Event</th><th>Trigger</th></tr></thead>
+      <tbody>
+        <tr><td class="param-name">identity.death_confirmed</td><td class="param-desc">JPN confirms death certificate</td></tr>
+        <tr><td class="param-name">estate.state_changed</td><td class="param-desc">Any state machine transition</td></tr>
+        <tr><td class="param-name">estate.dispute_opened</td><td class="param-desc">A dispute flag is raised by a heir</td></tr>
+        <tr><td class="param-name">distribution.confirmed</td><td class="param-desc">Distribution locked to chain</td></tr>
+        <tr><td class="param-name">sbt.issued</td><td class="param-desc">SBT minted and Ethereum-anchored</td></tr>
+        <tr><td class="param-name">estate.distributed</td><td class="param-desc">Final state — assets transferred</td></tr>
+        <tr><td class="param-name">sbt.annual_revalidation</td><td class="param-desc">Annual re-attestation completed</td></tr>
+      </tbody>
+    </table>
+    <div style="position:relative;">
+      <pre><code><span class="cmt">// Example webhook payload</span>
+{
+  <span class="key">"event"</span>:      <span class="str">"sbt.issued"</span>,
+  <span class="key">"timestamp"</span>:  <span class="str">"2025-03-22T14:35:00Z"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"sbt_id"</span>:     <span class="str">"sbt_p9x3k7mn"</span>,
+    <span class="key">"estate_id"</span>:  <span class="str">"est_m3k9p7xr"</span>,
+    <span class="key">"heir_ic"</span>:    <span class="str">"820315XXXXXX"</span>,
+    <span class="key">"share_bps"</span>:  <span class="num">1250</span>,
+    <span class="key">"eth_anchor"</span>: <span class="str">"0x7f3c...a8d1"</span>
+  }
+}</code></pre>
+      <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+    </div>
+  </div>
+
+  <!-- GET /fi/sbt/verify -->
+  <div class="endpoint" id="inst-fi-verify">
+    <div class="endpoint-header" onclick="toggleEndpoint(this)">
+      <span class="method GET">GET</span>
+      <span class="endpoint-path">/fi/sbt/verify?sbt_id=<span class="path-param">{sbt_id}</span></span>
+      <span class="endpoint-summary">FI quick-verify SBT</span>
+      <span class="endpoint-chevron">▼</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="endpoint-desc">Lightweight endpoint for financial institutions to quickly verify an SBT's validity and retrieve the collateral note. Returns a condensed response suitable for loan origination systems. No distribution details are exposed — only validity, heir entitlement amount, and recommended LTV.</p>
+      <span class="code-label">Response 200</span>
+      <div style="position:relative;">
+        <pre><code>{
+  <span class="key">"valid"</span>:            <span class="bool">true</span>,
+  <span class="key">"sbt_id"</span>:           <span class="str">"sbt_p9x3k7mn"</span>,
+  <span class="key">"heir_amount_sen"</span>:  <span class="num">6000000</span>,
+  <span class="key">"recommended_ltv"</span>: <span class="num">85</span>,
+  <span class="key">"collateral_type"</span>: <span class="str">"BENEFICIAL_INTEREST"</span>,
+  <span class="key">"ethereum_verified"</span>:<span class="bool">true</span>,
+  <span class="key">"last_validated"</span>:  <span class="str">"2026-03-22"</span>
+}</code></pre>
+        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  ENUMS
+════════════════════════════════════════ -->
+<div class="doc-section" id="enums">
+  <h2 class="doc-section-title">Enums & Constants</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <div>
+      <span class="code-label">Estate States</span>
+      <pre><code>PENDING_VERIFICATION
+IDENTITY_VERIFIED
+ASSET_MAPPED
+ARBITRATION
+SETTLEMENT_ISSUED
+DISTRIBUTED
+CLOSED</code></pre>
+    </div>
+    <div>
+      <span class="code-label">Track</span>
+      <pre><code>SYARIAH   <span class="cmt">// Faraid — Quran 4:11–12</span>
+CIVIL     <span class="cmt">// Distribution Act 1958</span></code></pre>
+      <span class="code-label">Resolution Mode</span>
+      <pre><code>A  <span class="cmt">// Collective Sale (بيع جماعي)</span>
+B  <span class="cmt">// Buyout (افتداء)</span>
+C  <span class="cmt">// Co-ownership / Musya' (مشاع)</span></code></pre>
+    </div>
+    <div>
+      <span class="code-label">Asset Types</span>
+      <pre><code>CASH
+PROPERTY
+VEHICLE
+SHARES
+BUSINESS
+OTHER</code></pre>
+    </div>
+    <div>
+      <span class="code-label">Urgency (Liquidity Discount)</span>
+      <pre><code>0  <span class="cmt">// Voluntary (0% discount)</span>
+1  <span class="cmt">// Court Order (10–20%)</span>
+2  <span class="cmt">// Forced Sale (20–30%)</span>
+3  <span class="cmt">// Distress Auction (30–40%)</span></code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  CHANGELOG
+════════════════════════════════════════ -->
+<div class="doc-section" id="changelog">
+  <h2 class="doc-section-title">Changelog</h2>
+  <div class="changelog-item">
+    <span class="changelog-date">2025-03-01</span>
+    <div class="changelog-text"><span class="changelog-tag new">new</span>Illiquid asset resolution modes (A/B/C) added to <code>/assets</code> and <code>/distribution/nde</code> endpoints. Liquidity discount schedule live.</div>
+  </div>
+  <div class="changelog-item">
+    <span class="changelog-date">2025-02-15</span>
+    <div class="changelog-text"><span class="changelog-tag new">new</span>SBT annual re-attestation via <code>sbt.annual_revalidation</code> webhook event. <code>last_validated_at</code> field added to SBT schema.</div>
+  </div>
+  <div class="changelog-item">
+    <span class="changelog-date">2025-02-01</span>
+    <div class="changelog-text"><span class="changelog-tag new">new</span>Institutional API (<code>/institutional/cases</code>) released. Webhook system live with 7 event types.</div>
+  </div>
+  <div class="changelog-item">
+    <span class="changelog-date">2025-01-15</span>
+    <div class="changelog-text"><span class="changelog-tag new">new</span><code>/fi/sbt/verify</code> endpoint released for FI-scoped read-only tokens. <code>recommended_ltv</code> field included.</div>
+  </div>
+  <div class="changelog-item">
+    <span class="changelog-date">2025-01-01</span>
+    <div class="changelog-text"><span class="changelog-tag new">new</span>v1.0-beta API released. Identity, estate, asset, distribution, and SBT endpoints available in sandbox.</div>
+  </div>
+</div>
+
+</main>
+
+<script>
+function toggleEndpoint(header) {
+  const ep = header.parentElement;
+  ep.classList.toggle('open');
+}
+
+function copyCode(btn) {
+  const pre = btn.previousElementSibling || btn.closest('pre');
+  const code = btn.closest('div').querySelector('pre code') || btn.closest('pre');
+  const text = code ? code.innerText : '';
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1800);
+  });
+}
+
+// Active sidebar link on scroll
+const sections = document.querySelectorAll('[id]');
+const sidebarLinks = document.querySelectorAll('.sidebar a[href^="#"]');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if(e.isIntersecting) {
+      sidebarLinks.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector('.sidebar a[href="#'+e.target.id+'"]');
+      if(link) link.classList.add('active');
+    }
+  });
+}, { rootMargin:'-10% 0px -80% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

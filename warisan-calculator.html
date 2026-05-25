@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warisan — Estate Distribution Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0d0d;
+  --parchment: #f5f0e8;
+  --gold: #b8962e;
+  --gold-light: #d4af5a;
+  --gold-pale: #f0e4c0;
+  --gold-faint: rgba(184,150,46,0.07);
+  --jade: #2a5c45;
+  --jade-light: #3a7a5e;
+  --rust: #8b3a2a;
+  --mist: #e8e4dc;
+  --line: rgba(184,150,46,0.22);
+  --dark: #0f0f0f;
+  --dark-card: #1a1a1a;
+  --white: #ffffff;
+  --arabic-font: 'Noto Naskh Arabic', 'Traditional Arabic', serif;
+  --body-font: 'Libre Baskerville', Georgia, serif;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body {
+  background:var(--parchment);color:var(--ink);
+  font-family:var(--body-font);overflow-x:hidden;min-height:100vh;
+}
+body::before {
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:0.5;
+}
+
+/* ── LANG SWITCHER DROPDOWN ── */
+.lang-bar {
+  background:var(--dark);border-bottom:1px solid rgba(184,150,46,0.15);
+  display:flex;justify-content:flex-end;align-items:center;
+  padding:0 3rem;
+}
+.lang-dropdown { position:relative; }
+.lang-trigger {
+  display:flex;align-items:center;gap:0.55rem;
+  padding:0.55rem 0.9rem;border:none;background:transparent;cursor:pointer;
+  font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:var(--gold);transition:color 0.2s;
+  border-left:1px solid rgba(184,150,46,0.15);
+}
+.lang-trigger:hover { color:var(--gold-light); }
+.lang-trigger .lang-globe { font-size:0.9rem;opacity:0.6; }
+.lang-trigger .lang-label { letter-spacing:0.12em; }
+.lang-trigger .lang-caret { font-size:0.5rem;opacity:0.5;transition:transform 0.2s;margin-left:0.1rem; }
+.lang-dropdown.open .lang-trigger .lang-caret { transform:rotate(180deg); }
+.lang-menu {
+  position:absolute;top:calc(100% + 2px);right:0;
+  background:var(--dark-card);border:1px solid rgba(184,150,46,0.2);
+  min-width:160px;z-index:500;
+  opacity:0;pointer-events:none;
+  transform:translateY(-6px);
+  transition:opacity 0.18s ease,transform 0.18s ease;
+  box-shadow:0 8px 24px rgba(0,0,0,0.4);
+}
+.lang-dropdown.open .lang-menu { opacity:1;pointer-events:auto;transform:translateY(0); }
+.lang-option {
+  display:flex;align-items:center;gap:0.65rem;
+  padding:0.7rem 1rem;cursor:pointer;
+  font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(232,228,220,0.45);
+  transition:all 0.15s;border-bottom:1px solid rgba(184,150,46,0.08);
+}
+.lang-option:last-child { border-bottom:none; }
+.lang-option:hover { background:rgba(184,150,46,0.07);color:rgba(232,228,220,0.85); }
+.lang-option.active { color:var(--gold);background:rgba(184,150,46,0.05); }
+.lang-option .opt-native { font-size:0.85rem;letter-spacing:0;min-width:22px;text-align:center; }
+.lang-option[data-lang="ar"] .opt-native { font-family:var(--arabic-font);font-size:1rem; }
+.lang-option .opt-check { margin-left:auto;font-size:0.6rem;color:var(--gold);opacity:0; }
+.lang-option.active .opt-check { opacity:1; }
+
+/* ── RTL support ── */
+html[dir="rtl"] body { font-family: var(--arabic-font); }
+html[dir="rtl"] .header-left { text-align:right; }
+html[dir="rtl"] .header-right { text-align:left; }
+html[dir="rtl"] .lang-menu { right:auto; left:0; }
+html[dir="rtl"] .rm-prefix { border-right:none; border-left:1px solid var(--line); }
+html[dir="rtl"] .dist-table th:last-child,
+html[dir="rtl"] .dist-table td:last-child { text-align:left; }
+html[dir="rtl"] .dist-table th:first-child,
+html[dir="rtl"] .dist-table td:first-child { text-align:right; }
+html[dir="rtl"] .info-box { border-left:none; border-right:3px solid var(--gold-light); }
+html[dir="rtl"] .info-box.warn { border-left:none; border-right:3px solid var(--rust); }
+html[dir="rtl"] .result-timestamp { text-align:left; }
+html[dir="rtl"] .calc-btn::before { transform-origin:right; }
+html[dir="rtl"] .section-label { letter-spacing:0.05em; }
+html[dir="rtl"] .heir-row-label, html[dir="rtl"] .heir-row-sub,
+html[dir="rtl"] .toggle-label, html[dir="rtl"] .toggle-sub { font-family:var(--arabic-font); }
+html[dir="rtl"] .dist-heir-name, html[dir="rtl"] .dist-heir-count { font-family:var(--arabic-font); }
+html[dir="rtl"] .empty-title { font-family:var(--arabic-font); font-style:normal; }
+html[dir="rtl"] .hero-bar p { font-family:var(--arabic-font); font-style:normal; }
+html[dir="rtl"] .wordmark .sub { letter-spacing:0; font-family:var(--arabic-font); }
+html[dir="rtl"] .header-left, html[dir="rtl"] .header-right { font-family:var(--arabic-font); letter-spacing:0; }
+html[dir="rtl"] .hero-bar h2 { font-family:var(--arabic-font); font-style:normal; }
+html[dir="rtl"] .result-estate-label { letter-spacing:0; font-family:var(--arabic-font); }
+html[dir="rtl"] .estat-lbl { letter-spacing:0; font-family:var(--arabic-font); }
+html[dir="rtl"] .dist-section-title { letter-spacing:0; font-family:var(--arabic-font); }
+html[dir="rtl"] .info-box p { font-family:var(--arabic-font); }
+html[dir="rtl"] .rule-cite { font-family:var(--arabic-font); letter-spacing:0; }
+html[dir="rtl"] .heir-tag { letter-spacing:0; font-family:var(--arabic-font); }
+html[dir="rtl"] .reset-link { font-family:var(--arabic-font); letter-spacing:0; }
+html[dir="rtl"] .input-label { letter-spacing:0; font-family:var(--arabic-font); }
+
+/* ── HEADER ── */
+header {
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding:1.6rem 3rem;border-bottom:1px solid var(--line);
+}
+.header-left{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--gold);letter-spacing:0.15em;text-transform:uppercase;line-height:1.9;}
+.wordmark{text-align:center;}
+.wordmark h1{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;letter-spacing:0.08em;color:var(--ink);}
+.wordmark .sub{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--gold);letter-spacing:0.12em;margin-top:0.2rem;text-transform:uppercase;}
+.header-right{text-align:right;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(13,13,13,0.35);letter-spacing:0.1em;line-height:1.9;}
+
+/* ── HERO BAR ── */
+.hero-bar{background:var(--dark);padding:2.5rem 3rem;border-bottom:1px solid rgba(184,150,46,0.15);display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center;}
+.hero-bar h2{font-family:'Playfair Display',serif;font-size:2.2rem;color:var(--parchment);font-weight:400;line-height:1.2;}
+.hero-bar h2 em{color:var(--gold);font-style:italic;}
+html[dir="rtl"] .hero-bar h2 em{font-style:normal;}
+.hero-bar p{font-size:0.88rem;color:rgba(232,228,220,0.55);line-height:1.9;font-style:italic;}
+
+/* ── MAIN LAYOUT ── */
+.main-wrap{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 200px);}
+.left-panel{border-right:1px solid var(--line);padding:2.5rem 2rem;background:var(--parchment);overflow-y:auto;}
+html[dir="rtl"] .left-panel{border-right:none;border-left:1px solid var(--line);}
+
+/* Track selector */
+.track-selector{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-bottom:2rem;border:1px solid var(--line);}
+.track-btn{padding:0.85rem 0.5rem;border:none;background:transparent;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(13,13,13,0.4);transition:all 0.2s;display:flex;flex-direction:column;align-items:center;gap:0.3rem;border-right:1px solid var(--line);}
+.track-btn:last-child{border-right:none;}
+.track-btn .track-icon{font-size:1.1rem;opacity:0.4;transition:opacity 0.2s;}
+.track-btn.active.syariah{background:var(--jade);color:#fff;}
+.track-btn.active.syariah .track-icon{opacity:1;}
+.track-btn.active.civil{background:var(--rust);color:#fff;}
+.track-btn.active.civil .track-icon{opacity:1;}
+.track-btn:not(.active):hover{background:var(--gold-faint);}
+html[dir="rtl"] .track-btn{font-family:var(--arabic-font);letter-spacing:0;font-size:0.78rem;}
+
+/* Section label */
+.section-label{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.9rem;padding-bottom:0.4rem;border-bottom:1px solid var(--line);}
+
+/* Estate value */
+.estate-input-wrap{margin-bottom:1.8rem;}
+.input-label{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.5);margin-bottom:0.4rem;display:block;}
+.rm-input-wrap{display:flex;align-items:center;border:1px solid var(--line);background:var(--white);transition:border-color 0.2s;}
+.rm-input-wrap:focus-within{border-color:var(--gold);}
+.rm-prefix{padding:0.7rem 0.8rem;font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--gold);background:var(--gold-faint);border-right:1px solid var(--line);letter-spacing:0.05em;white-space:nowrap;}
+.rm-input-wrap input{flex:1;padding:0.7rem 0.8rem;border:none;outline:none;background:transparent;font-family:'Libre Baskerville',serif;font-size:1rem;color:var(--ink);width:100%;}
+.rm-input-wrap input::placeholder{color:rgba(13,13,13,0.25);}
+
+/* Heir rows */
+.heirs-grid{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.8rem;}
+.heir-row{display:grid;align-items:center;gap:0.6rem;padding:0.65rem 0.8rem;background:var(--white);border:1px solid var(--mist);transition:border-color 0.2s;}
+.heir-row.active{border-color:var(--gold-light);}
+.heir-row-label{font-size:0.82rem;color:var(--ink);line-height:1.3;}
+.heir-row-sub{font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.4);letter-spacing:0.05em;}
+.heir-counter{display:flex;align-items:center;gap:0.4rem;justify-content:flex-end;flex-shrink:0;}
+.counter-btn{width:26px;height:26px;border:1px solid var(--line);background:transparent;cursor:pointer;font-size:0.9rem;color:var(--ink);transition:all 0.15s;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;}
+.counter-btn:hover{background:var(--gold);border-color:var(--gold);color:#fff;}
+.counter-val{font-family:'DM Mono',monospace;font-size:0.9rem;font-weight:500;color:var(--ink);min-width:20px;text-align:center;}
+.heir-row.syariah-row{grid-template-columns:1fr auto;}
+.heir-row.civil-row{grid-template-columns:1fr auto;}
+
+/* Toggle */
+.toggle-row{display:flex;justify-content:space-between;align-items:center;padding:0.65rem 0.8rem;background:var(--white);border:1px solid var(--mist);margin-bottom:0.5rem;transition:border-color 0.2s;}
+.toggle-row.active{border-color:var(--gold-light);}
+.toggle-label{font-size:0.82rem;color:var(--ink);}
+.toggle-sub{font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.4);}
+.toggle-switch{position:relative;width:40px;height:22px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--mist);cursor:pointer;transition:0.2s;border:1px solid var(--line);}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;left:2px;top:2px;background:rgba(13,13,13,0.3);transition:0.2s;}
+input:checked + .toggle-slider{background:var(--jade);border-color:var(--jade);}
+input:checked + .toggle-slider::before{transform:translateX(18px);background:#fff;}
+
+/* Calc btn */
+.calc-btn{width:100%;padding:1rem;background:var(--dark);border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);transition:all 0.2s;margin-top:0.5rem;position:relative;overflow:hidden;}
+.calc-btn::before{content:'';position:absolute;inset:0;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform 0.3s ease;}
+.calc-btn:hover::before{transform:scaleX(1);}
+.calc-btn:hover{color:var(--dark);}
+.calc-btn span{position:relative;z-index:1;}
+html[dir="rtl"] .calc-btn{font-family:var(--arabic-font);letter-spacing:0;font-size:0.9rem;}
+
+/* Reset */
+.reset-link{display:block;text-align:center;margin-top:0.8rem;font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.3);cursor:pointer;text-decoration:none;transition:color 0.2s;}
+.reset-link:hover{color:var(--rust);}
+
+/* RIGHT PANEL */
+.right-panel{padding:2.5rem 2.5rem;overflow-y:auto;background:var(--parchment);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;min-height:500px;text-align:center;gap:1rem;}
+.empty-glyph{font-family:'Playfair Display',serif;font-size:5rem;color:rgba(184,150,46,0.15);line-height:1;font-style:italic;}
+.empty-title{font-family:'Playfair Display',serif;font-size:1.2rem;color:rgba(13,13,13,0.4);font-style:italic;}
+.empty-hint{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;color:rgba(13,13,13,0.2);text-transform:uppercase;}
+
+/* Results */
+.results-wrap{display:flex;flex-direction:column;gap:2rem;}
+.result-header{display:grid;grid-template-columns:1fr auto;align-items:start;gap:1rem;padding-bottom:1.2rem;border-bottom:1px solid var(--line);}
+.result-track-badge{display:inline-flex;align-items:center;gap:0.5rem;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;padding:0.3rem 0.7rem;border:1px solid currentColor;}
+.result-track-badge.syariah{color:var(--jade);}
+.result-track-badge.civil{color:var(--rust);}
+html[dir="rtl"] .result-track-badge{font-family:var(--arabic-font);letter-spacing:0;}
+.result-estate-val{font-family:'Playfair Display',serif;font-size:2.2rem;font-style:italic;color:var(--gold);margin-top:0.3rem;}
+.result-estate-label{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.35);margin-top:0.2rem;}
+.result-timestamp{font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.25);letter-spacing:0.08em;text-align:right;line-height:1.9;}
+
+.estate-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);}
+.estat-cell{background:var(--parchment);padding:1rem 1.2rem;}
+.estat-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-style:italic;color:var(--ink);}
+.estat-lbl{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.35);margin-top:0.2rem;}
+
+.dist-section-title{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:0.8rem;}
+.dist-table{width:100%;border-collapse:collapse;}
+.dist-table th{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(13,13,13,0.35);padding:0.5rem 0.8rem;text-align:left;border-bottom:1px solid var(--line);font-weight:400;}
+.dist-table th:last-child,.dist-table td:last-child{text-align:right;}
+.dist-table td{padding:0.85rem 0.8rem;border-bottom:1px solid rgba(184,150,46,0.1);vertical-align:middle;}
+.dist-heir-name{font-size:0.9rem;font-weight:700;color:var(--ink);}
+.dist-heir-count{font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(13,13,13,0.4);margin-top:0.1rem;}
+.dist-fraction{font-family:'DM Mono',monospace;font-size:0.75rem;color:var(--jade);font-weight:500;}
+.dist-fraction.civil-frac{color:var(--rust);}
+.dist-pct{font-family:'DM Mono',monospace;font-size:0.68rem;color:rgba(13,13,13,0.4);}
+.dist-amount{font-family:'Playfair Display',serif;font-size:1.05rem;font-style:italic;color:var(--ink);}
+.dist-per-person{font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.35);margin-top:0.1rem;}
+.share-bar-wrap{margin-top:0.2rem;}
+.share-bar{height:3px;background:rgba(184,150,46,0.15);position:relative;overflow:hidden;}
+.share-bar-fill{height:100%;background:var(--jade);transition:width 0.6s ease;}
+.share-bar-fill.civil-bar{background:var(--rust);}
+
+.dist-visual{display:flex;height:28px;overflow:hidden;border:1px solid var(--line);gap:1px;background:var(--line);}
+.dist-visual-seg{height:100%;transition:flex 0.6s ease;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'DM Mono',monospace;font-size:0.55rem;color:rgba(255,255,255,0.8);letter-spacing:0.05em;min-width:0;}
+
+.residue-row td{background:var(--gold-faint);}
+.residue-row .dist-heir-name{color:var(--gold);}
+.residue-row .dist-amount{color:var(--gold);}
+
+.info-box{padding:1rem 1.2rem;border-left:3px solid var(--gold-light);background:rgba(184,150,46,0.06);}
+.info-box.warn{border-left-color:var(--rust);background:rgba(139,58,42,0.05);}
+.info-box p{font-size:0.8rem;line-height:1.7;color:rgba(13,13,13,0.65);}
+.info-box strong{color:var(--ink);}
+.rule-cite{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.08em;color:rgba(13,13,13,0.25);padding-top:0.3rem;}
+.heir-tags{display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:1.5rem;}
+.heir-tag{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;padding:0.22rem 0.55rem;border:1px solid currentColor;}
+.heir-tag.syariah-tag{color:var(--jade);}
+.heir-tag.civil-tag{color:var(--rust);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.results-wrap > *{animation:fadeUp 0.35s ease both;}
+.results-wrap > *:nth-child(2){animation-delay:0.05s;}
+.results-wrap > *:nth-child(3){animation-delay:0.1s;}
+.results-wrap > *:nth-child(4){animation-delay:0.15s;}
+.results-wrap > *:nth-child(5){animation-delay:0.2s;}
+
+
+/* ── ASSET PANEL ── */
+.panel-tabs {
+  display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line);
+  margin-bottom:0;
+}
+.panel-tab {
+  padding:0.7rem 1rem;border:none;background:transparent;cursor:pointer;
+  font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(13,13,13,0.4);transition:all 0.2s;
+  border-bottom:2px solid transparent;
+}
+.panel-tab.active { color:var(--gold);border-bottom-color:var(--gold); }
+.panel-tab:hover:not(.active) { color:rgba(13,13,13,0.7); }
+
+/* Asset list */
+.asset-list { display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1rem; }
+.asset-card {
+  background:var(--white);border:1px solid var(--mist);padding:0.7rem 0.8rem;
+  position:relative;transition:border-color 0.2s;
+}
+.asset-card.active-card { border-color:var(--gold-light); }
+.asset-card-head {
+  display:grid;grid-template-columns:1fr auto;align-items:center;gap:0.5rem;
+  margin-bottom:0.4rem;
+}
+.asset-name-input {
+  font-family:'Libre Baskerville',serif;font-size:0.82rem;color:var(--ink);
+  border:none;outline:none;background:transparent;width:100%;
+  border-bottom:1px solid var(--line);padding-bottom:0.15rem;
+}
+.asset-name-input:focus { border-bottom-color:var(--gold); }
+.asset-del-btn {
+  width:20px;height:20px;border:1px solid var(--line);background:transparent;
+  cursor:pointer;font-size:0.65rem;color:rgba(13,13,13,0.3);
+  display:flex;align-items:center;justify-content:center;transition:all 0.15s;
+  flex-shrink:0;
+}
+.asset-del-btn:hover { background:var(--rust);border-color:var(--rust);color:#fff; }
+.asset-row2 {
+  display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.4rem;
+}
+.asset-field-label {
+  font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(13,13,13,0.38);margin-bottom:0.2rem;
+}
+.asset-select {
+  width:100%;padding:0.35rem 0.4rem;border:1px solid var(--line);background:var(--white);
+  font-family:'DM Mono',monospace;font-size:0.62rem;color:var(--ink);
+  outline:none;cursor:pointer;transition:border-color 0.2s;
+}
+.asset-select:focus { border-color:var(--gold); }
+.asset-val-input {
+  width:100%;padding:0.35rem 0.4rem;border:1px solid var(--line);background:var(--white);
+  font-family:'Libre Baskerville',serif;font-size:0.82rem;color:var(--ink);
+  outline:none;transition:border-color 0.2s;
+}
+.asset-val-input:focus { border-color:var(--gold); }
+.asset-row3 { margin-top:0.4rem; }
+.mode-btns { display:grid;grid-template-columns:repeat(3,1fr);gap:0; }
+.mode-btn {
+  padding:0.3rem 0.2rem;border:1px solid var(--line);background:transparent;
+  cursor:pointer;font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.05em;
+  text-transform:uppercase;color:rgba(13,13,13,0.4);transition:all 0.15s;
+  border-right:none;
+}
+.mode-btn:last-child { border-right:1px solid var(--line); }
+.mode-btn.mode-A.sel { background:var(--jade);border-color:var(--jade);color:#fff; }
+.mode-btn.mode-B.sel { background:var(--gold);border-color:var(--gold);color:var(--ink); }
+.mode-btn.mode-C.sel { background:var(--rust);border-color:var(--rust);color:#fff; }
+.mode-btn:hover:not(.sel) { background:var(--gold-faint); }
+.asset-urgency-row { margin-top:0.4rem; display:none; }
+.asset-urgency-row.show { display:block; }
+.urgency-slider {
+  width:100%;accent-color:var(--rust);cursor:pointer;
+  height:3px;margin:0.3rem 0;
+}
+
+.add-asset-btn {
+  width:100%;padding:0.6rem;border:1px dashed var(--line);background:transparent;
+  cursor:pointer;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.12em;
+  text-transform:uppercase;color:rgba(13,13,13,0.35);transition:all 0.2s;
+}
+.add-asset-btn:hover { border-color:var(--gold);color:var(--gold); }
+
+/* Illiquid results */
+.asset-ledger { width:100%;border-collapse:collapse;font-size:0.78rem; }
+.asset-ledger th {
+  font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.1em;
+  text-transform:uppercase;color:rgba(13,13,13,0.35);padding:0.4rem 0.6rem;
+  text-align:left;border-bottom:1px solid var(--line);font-weight:400;
+}
+.asset-ledger td { padding:0.5rem 0.6rem;border-bottom:1px solid rgba(184,150,46,0.08);vertical-align:top; }
+.asset-ledger td:last-child { text-align:right; }
+.asset-type-pill {
+  font-family:'DM Mono',monospace;font-size:0.52rem;letter-spacing:0.08em;
+  text-transform:uppercase;padding:0.12rem 0.4rem;border:1px solid currentColor;
+  white-space:nowrap;
+}
+.asset-type-pill.cash { color:var(--jade); }
+.asset-type-pill.property { color:var(--rust); }
+.asset-type-pill.vehicle { color:rgba(13,13,13,0.4); }
+.asset-type-pill.shares { color:var(--gold); }
+.asset-type-pill.business { color:var(--rust); }
+.asset-type-pill.other { color:rgba(13,13,13,0.35); }
+.mode-pill {
+  font-family:'DM Mono',monospace;font-size:0.5rem;padding:0.1rem 0.35rem;
+  border:1px solid currentColor;
+}
+.mode-pill.A { color:var(--jade); }
+.mode-pill.B { color:var(--gold); }
+.mode-pill.C { color:var(--rust); }
+.discount-note { font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--rust); }
+.adj-val { font-family:'Playfair Display',serif;font-size:0.95rem;font-style:italic;color:var(--ink); }
+.gev-bar {
+  display:flex;height:20px;overflow:hidden;border:1px solid var(--line);
+  gap:1px;background:var(--line);margin:0.5rem 0;
+}
+.gev-seg {
+  height:100%;display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:0.5rem;color:rgba(255,255,255,0.8);
+  overflow:hidden;min-width:0;
+}
+.summary-equation {
+  background:var(--ink);padding:1.2rem 1.5rem;margin-top:0;
+}
+.eq-line {
+  font-family:'DM Mono',monospace;font-size:0.7rem;color:rgba(232,228,220,0.5);
+  line-height:2;
+}
+.eq-line .eq-val { color:var(--gold-light); }
+.eq-line .eq-label { color:rgba(232,228,220,0.35); }
+.eq-result {
+  font-family:'Playfair Display',serif;font-size:1.6rem;font-style:italic;
+  color:var(--gold);margin-top:0.3rem;
+}
+
+/* Heir entitlement table (illiquid) */
+.entitlement-section { margin-top:1.5rem; }
+.entitlement-row { display:grid;gap:0.8rem;padding:0.9rem;background:var(--white);border:1px solid var(--mist);margin-bottom:0.5rem; }
+.entitlement-row.active-card { border-color:var(--gold-light); }
+.entitlement-heir { font-size:0.88rem;font-weight:700;color:var(--ink); }
+.entitlement-frac { font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--jade); }
+.entitlement-breakdown { font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(13,13,13,0.4);line-height:1.7; }
+.entitlement-total { font-family:'Playfair Display',serif;font-size:1.1rem;font-style:italic;color:var(--ink);text-align:right; }
+.entitlement-sbt {
+  font-family:'DM Mono',monospace;font-size:0.55rem;letter-spacing:0.08em;
+  text-transform:uppercase;padding:0.18rem 0.5rem;border:1px solid var(--gold);
+  color:var(--gold);display:inline-block;margin-top:0.25rem;
+}
+html[dir="rtl"] .asset-row2 { direction:rtl; }
+html[dir="rtl"] .mode-btns { direction:rtl; }
+html[dir="rtl"] .asset-ledger th, html[dir="rtl"] .asset-ledger td { font-family:var(--arabic-font); }
+
+/* Lang transition */
+[data-t]{transition:opacity 0.15s ease;}
+</style>
+</head>
+<body>
+
+<!-- LANG BAR -->
+<div class="lang-bar">
+  <div class="lang-dropdown" id="lang-dropdown">
+    <button class="lang-trigger" onclick="toggleLangMenu(event)">
+      <span class="lang-globe">⊕</span>
+      <span class="lang-label" id="lang-current-label">English</span>
+      <span class="lang-caret">▼</span>
+    </button>
+    <div class="lang-menu" id="lang-menu">
+      <div class="lang-option active" data-lang="en" onclick="pickLang('en')">
+        <span class="opt-native">EN</span>English<span class="opt-check">✓</span>
+      </div>
+      <div class="lang-option" data-lang="ms" onclick="pickLang('ms')">
+        <span class="opt-native">BM</span>Bahasa Malaysia<span class="opt-check">✓</span>
+      </div>
+      <div class="lang-option" data-lang="ar" onclick="pickLang('ar')">
+        <span class="opt-native">عربي</span>Arabic<span class="opt-check">✓</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left" id="h-left"></div>
+  <div class="wordmark">
+    <h1>WARISAN</h1>
+    <div class="sub" data-t="header.sub"></div>
+  </div>
+  <div class="header-right" id="h-right"></div>
+</header>
+
+<!-- HERO BAR -->
+<div class="hero-bar">
+  <div>
+    <h2 id="hero-title"></h2>
+  </div>
+  <div>
+    <p data-t="hero.desc"></p>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main-wrap">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+
+    <div class="track-selector" style="margin-bottom:1.5rem;">
+      <button class="track-btn syariah active" id="btn-syariah" onclick="setTrack('syariah')">
+        <span class="track-icon">☽</span>
+        <span data-t="track.syariah"></span>
+        <span style="font-size:0.52rem;opacity:0.7;" data-t="track.syariah.sub"></span>
+      </button>
+      <button class="track-btn civil" id="btn-civil" onclick="setTrack('civil')">
+        <span class="track-icon">⚖</span>
+        <span data-t="track.civil"></span>
+        <span style="font-size:0.52rem;opacity:0.7;" data-t="track.civil.sub"></span>
+      </button>
+    </div>
+
+    <!-- Estate Value -->
+    <div class="section-label" data-t="section.estate"></div>
+    <div class="estate-input-wrap" id="main-estate-wrap">
+      <label class="input-label" data-t="label.estate"></label>
+      <div class="rm-input-wrap">
+        <span class="rm-prefix">RM</span>
+        <input type="number" id="estate-val" min="0" step="1000">
+      </div>
+    </div>
+
+    <!-- Syariah -->
+    <div id="syariah-inputs">
+      <div class="section-label" data-t="section.deceased"></div>
+      <div class="toggle-row active" style="margin-bottom:1.5rem;">
+        <div>
+          <div class="toggle-label" data-t="deceased.male"></div>
+          <div class="toggle-sub" data-t="deceased.male.sub"></div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="s-male" checked onchange="render()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="section-label" data-t="section.spouses"></div>
+      <div class="heirs-grid">
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.husband"></div><div class="heir-row-sub" data-t="heir.husband.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-husband',-1)">−</button>
+            <span class="counter-val" id="val-s-husband">0</span>
+            <button class="counter-btn" onclick="adj('s-husband',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.wives"></div><div class="heir-row-sub" data-t="heir.wives.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-wives',-1)">−</button>
+            <span class="counter-val" id="val-s-wives">0</span>
+            <button class="counter-btn" onclick="adj('s-wives',1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label" data-t="section.children"></div>
+      <div class="heirs-grid">
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.sons"></div><div class="heir-row-sub" data-t="heir.sons.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-sons',-1)">−</button>
+            <span class="counter-val" id="val-s-sons">0</span>
+            <button class="counter-btn" onclick="adj('s-sons',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.daughters"></div><div class="heir-row-sub" data-t="heir.daughters.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-daughters',-1)">−</button>
+            <span class="counter-val" id="val-s-daughters">0</span>
+            <button class="counter-btn" onclick="adj('s-daughters',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.gsons"></div><div class="heir-row-sub" data-t="heir.gsons.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-gsons',-1)">−</button>
+            <span class="counter-val" id="val-s-gsons">0</span>
+            <button class="counter-btn" onclick="adj('s-gsons',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.gdaughters"></div><div class="heir-row-sub" data-t="heir.gdaughters.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-gdaughters',-1)">−</button>
+            <span class="counter-val" id="val-s-gdaughters">0</span>
+            <button class="counter-btn" onclick="adj('s-gdaughters',1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label" data-t="section.parents"></div>
+      <div class="heirs-grid">
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.father"></div><div class="heir-row-sub" data-t="heir.father.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-father',-1)">−</button>
+            <span class="counter-val" id="val-s-father">0</span>
+            <button class="counter-btn" onclick="adj('s-father',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.mother"></div><div class="heir-row-sub" data-t="heir.mother.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-mother',-1)">−</button>
+            <span class="counter-val" id="val-s-mother">0</span>
+            <button class="counter-btn" onclick="adj('s-mother',1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label" data-t="section.siblings"></div>
+      <div class="heirs-grid">
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.fbro"></div><div class="heir-row-sub" data-t="heir.fbro.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-fbro',-1)">−</button>
+            <span class="counter-val" id="val-s-fbro">0</span>
+            <button class="counter-btn" onclick="adj('s-fbro',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.fsis"></div><div class="heir-row-sub" data-t="heir.fsis.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-fsis',-1)">−</button>
+            <span class="counter-val" id="val-s-fsis">0</span>
+            <button class="counter-btn" onclick="adj('s-fsis',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.pbro"></div><div class="heir-row-sub" data-t="heir.pbro.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-pbro',-1)">−</button>
+            <span class="counter-val" id="val-s-pbro">0</span>
+            <button class="counter-btn" onclick="adj('s-pbro',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.psis"></div><div class="heir-row-sub" data-t="heir.psis.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-psis',-1)">−</button>
+            <span class="counter-val" id="val-s-psis">0</span>
+            <button class="counter-btn" onclick="adj('s-psis',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.msib"></div><div class="heir-row-sub" data-t="heir.msib.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-msib',-1)">−</button>
+            <span class="counter-val" id="val-s-msib">0</span>
+            <button class="counter-btn" onclick="adj('s-msib',1)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-label" data-t="section.grandparents"></div>
+      <div class="heirs-grid">
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.pgf"></div><div class="heir-row-sub" data-t="heir.pgf.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-pgf',-1)">−</button>
+            <span class="counter-val" id="val-s-pgf">0</span>
+            <button class="counter-btn" onclick="adj('s-pgf',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row syariah-row">
+          <div><div class="heir-row-label" data-t="heir.mgm"></div><div class="heir-row-sub" data-t="heir.mgm.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('s-mgm',-1)">−</button>
+            <span class="counter-val" id="val-s-mgm">0</span>
+            <button class="counter-btn" onclick="adj('s-mgm',1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Civil -->
+    <div id="civil-inputs" style="display:none;">
+      <div class="section-label" data-t="section.spouse"></div>
+      <div class="heirs-grid">
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.spouse"></div><div class="heir-row-sub" data-t="heir.c.spouse.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-spouse',-1)">−</button>
+            <span class="counter-val" id="val-c-spouse">0</span>
+            <button class="counter-btn" onclick="adj('c-spouse',1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-label" data-t="section.children"></div>
+      <div class="heirs-grid">
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.children"></div><div class="heir-row-sub" data-t="heir.c.children.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-children',-1)">−</button>
+            <span class="counter-val" id="val-c-children">0</span>
+            <button class="counter-btn" onclick="adj('c-children',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.grandchildren"></div><div class="heir-row-sub" data-t="heir.c.grandchildren.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-grandchildren',-1)">−</button>
+            <span class="counter-val" id="val-c-grandchildren">0</span>
+            <button class="counter-btn" onclick="adj('c-grandchildren',1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-label" data-t="section.parentsib"></div>
+      <div class="heirs-grid">
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.parents"></div><div class="heir-row-sub" data-t="heir.c.parents.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-parents',-1)">−</button>
+            <span class="counter-val" id="val-c-parents">0</span>
+            <button class="counter-btn" onclick="adj('c-parents',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.siblings"></div><div class="heir-row-sub" data-t="heir.c.siblings.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-siblings',-1)">−</button>
+            <span class="counter-val" id="val-c-siblings">0</span>
+            <button class="counter-btn" onclick="adj('c-siblings',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.nepniece"></div><div class="heir-row-sub" data-t="heir.c.nepniece.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-nepniece',-1)">−</button>
+            <span class="counter-val" id="val-c-nepniece">0</span>
+            <button class="counter-btn" onclick="adj('c-nepniece',1)">+</button>
+          </div>
+        </div>
+      </div>
+      <div class="section-label" data-t="section.extended"></div>
+      <div class="heirs-grid">
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.grandparents"></div><div class="heir-row-sub" data-t="heir.c.grandparents.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-grandparents',-1)">−</button>
+            <span class="counter-val" id="val-c-grandparents">0</span>
+            <button class="counter-btn" onclick="adj('c-grandparents',1)">+</button>
+          </div>
+        </div>
+        <div class="heir-row civil-row">
+          <div><div class="heir-row-label" data-t="heir.c.uncleaunt"></div><div class="heir-row-sub" data-t="heir.c.uncleaunt.sub"></div></div>
+          <div class="heir-counter">
+            <button class="counter-btn" onclick="adj('c-uncleaunt',-1)">−</button>
+            <span class="counter-val" id="val-c-uncleaunt">0</span>
+            <button class="counter-btn" onclick="adj('c-uncleaunt',1)">+</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ASSET PANEL -->
+    <div id="asset-panel" style="display:none;">
+      <div class="section-label" data-t="section.assets">Assets</div>
+      <div class="estate-input-wrap" style="margin-bottom:1rem;">
+        <label class="input-label" data-t="label.liabilities">Total debts + funeral + admin costs</label>
+        <div class="rm-input-wrap">
+          <span class="rm-prefix">RM</span>
+          <input type="number" id="liabilities-val" placeholder="e.g. 50000" min="0" step="1000">
+        </div>
+      </div>
+
+      <div class="section-label" data-t="section.assetlist">Asset Declaration</div>
+      <div class="asset-list" id="asset-list"></div>
+      <button class="add-asset-btn" onclick="addAsset()">
+        <span data-t="btn.addasset">+ Add Asset</span>
+      </button>
+    </div>
+
+    <button class="calc-btn" onclick="calculate()"><span data-t="btn.calculate"></span></button>
+    <a class="reset-link" onclick="resetAll()" data-t="btn.reset"></a>
+
+  </div><!-- end left-panel -->
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel" id="right-panel">
+    <div class="empty-state" id="empty-state">
+      <div class="empty-glyph">وارثان</div>
+      <div class="empty-title" data-t="empty.title"></div>
+      <div class="empty-hint" data-t="empty.hint"></div>
+    </div>
+    <div class="results-wrap" id="results-wrap" style="display:none;"></div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// TRANSLATIONS
+// ═══════════════════════════════════════════
+const T = {
+  en: {
+    'header.left':  'WARISAN PROTOCOL\nوارثان — Estate Resolution',
+    'header.sub':   'Estate Distribution Calculator',
+    'header.right': 'Syariah (Faraid) + Civil\nQuran 4:11–12 · Dist. Act 1958\nConcept Reference Tool',
+    'hero.title':   'Calculate estate distribution <em>with precision.</em>',
+    'hero.desc':    'Enter the estate value and heir configuration. The engine applies Faraid rules (Quran 4:11–12, 4:176) for the Syariah track, or the Distribution Act 1958 for the civil intestate track. Results are indicative — not legal advice.',
+    'track.syariah':'Syariah Track',
+    'track.syariah.sub':'Faraid / Quran 4:11',
+    'track.civil':  'Civil Track',
+    'track.civil.sub':'Distribution Act 1958',
+    'section.estate':'Estate Value',
+    'label.estate': 'Total net estate (after debts & funeral expenses)',
+    'section.deceased':'Deceased',
+    'deceased.male':'Deceased is Male',
+    'deceased.male.sub':'Toggle off if deceased is female',
+    'section.spouses':'Surviving Spouses',
+    'section.children':'Children',
+    'section.parents':'Parents',
+    'section.siblings':'Siblings (if no father / children)',
+    'section.grandparents':'Grandparents (if no closer relatives)',
+    'section.spouse':'Spouse',
+    'section.parentsib':'Parents & Siblings',
+    'section.extended':'Extended (no closer heirs)',
+    'heir.husband':  'Husband (زوج)',
+    'heir.husband.sub':'1/4 if children; 1/2 if no children',
+    'heir.wives':    'Wife / Wives (زوجة)',
+    'heir.wives.sub':'1/8 if children; 1/4 if no children (max 4)',
+    'heir.sons':     'Sons (ابن)',
+    'heir.sons.sub': 'Residuary — 2× share of daughter',
+    'heir.daughters':'Daughters (بنت)',
+    'heir.daughters.sub':'1/2 solo; 2/3 if ≥2; residuary w/ sons',
+    'heir.gsons':    "Sons of Son (ابن الابن)",
+    'heir.gsons.sub':'Inherit only if no direct son',
+    'heir.gdaughters':"Daughters of Son (بنت الابن)",
+    'heir.gdaughters.sub':'Inherit if no direct children',
+    'heir.father':   'Father (أب)',
+    'heir.father.sub':'1/6 if children; residuary if no children',
+    'heir.mother':   'Mother (أم)',
+    'heir.mother.sub':'1/6 if children; 1/3 if no children',
+    'heir.fbro':     'Full Brothers (أخ شقيق)',
+    'heir.fbro.sub': 'Blocked by father or son',
+    'heir.fsis':     'Full Sisters (أخت شقيقة)',
+    'heir.fsis.sub': '1/2 solo; 2/3 if ≥2; residuary w/ brother',
+    'heir.pbro':     'Paternal Half-Brothers',
+    'heir.pbro.sub': 'Blocked by father, son, or full brother',
+    'heir.psis':     'Paternal Half-Sisters',
+    'heir.psis.sub': 'Blocked by father, son, or full siblings',
+    'heir.msib':     'Maternal Half-Siblings',
+    'heir.msib.sub': '1/6 each; 1/3 shared if ≥2',
+    'heir.pgf':      'Paternal Grandfather (جد)',
+    'heir.pgf.sub':  'Steps in if no father',
+    'heir.mgm':      'Maternal Grandmother (جدة)',
+    'heir.mgm.sub':  '1/6; blocked by mother',
+    'heir.c.spouse': 'Surviving Spouse',
+    'heir.c.spouse.sub':'1/4 (children); 1/2 (parents only); full remainder',
+    'heir.c.children':'Children (any gender)',
+    'heir.c.children.sub':'Equal shares; includes adopted children',
+    'heir.c.grandchildren':'Grandchildren',
+    'heir.c.grandchildren.sub':'Only inherit if their parent predeceased',
+    'heir.c.parents':'Parents (each counts)',
+    'heir.c.parents.sub':'1/2 of residue if both alive; equal share',
+    'heir.c.siblings':'Siblings (brothers & sisters)',
+    'heir.c.siblings.sub':'Equal share; only if no direct descendants',
+    'heir.c.nepniece':'Nephews & Nieces',
+    'heir.c.nepniece.sub':'Only if their parent (sibling) predeceased',
+    'heir.c.grandparents':'Grandparents',
+    'heir.c.grandparents.sub':'Only if no parents alive',
+    'heir.c.uncleaunt':'Uncles & Aunts',
+    'heir.c.uncleaunt.sub':'Only if no siblings',
+
+    'tab.heirs':    'Heirs & Distribution',
+    'tab.assets':   'Asset Ledger',
+    'section.assets':'Estate Assets',
+    'label.liabilities':'Total debts + funeral + admin costs',
+    'section.assetlist':'Asset Declaration',
+    'btn.addasset':  '+ Add Asset',
+    'btn.calculate': '⟶ Calculate Distribution',
+    'btn.reset':     '↺ Reset all fields',
+    'empty.title':   'Awaiting estate configuration',
+    'empty.hint':    'Enter estate value and heir details, then calculate',
+    'result.syariah.badge':'Syariah Track — Faraid',
+    'result.civil.badge':'Civil Track — Distribution Act 1958',
+    'result.net':    'Net distributable estate',
+    'result.calculated':'Calculated',
+    'result.at':     'at',
+    'result.indicative':'INDICATIVE ONLY',
+    'result.categories':'Heir Categories',
+    'result.persons':'Total Persons',
+    'result.allocated':'Shares Allocated',
+    'result.breakdown':'Distribution Breakdown',
+    'result.heir':   'Heir',
+    'result.share':  'Share',
+    'result.basis':  'Basis',
+    'result.amount': 'Amount',
+    'result.persons.each':'persons',
+    'result.person.each':'person',
+    'result.each':   'each',
+    'blocked.title': 'Blocked heirs (Hajb):',
+    'blocked.note':  'The following heirs you entered are blocked from inheriting by higher-priority relatives:',
+    'blocked.rule':  "Rule: Quran 4:11–12 · Classical Faraid — Hajb Hirman",
+    'disclaimer.title':'Disclaimer:',
+    'disclaimer.text':'This calculator provides a simplified, indicative distribution based on classical Faraid rules (Quran 4:11–12, 4:176) and the Malaysian Distribution Act 1958. Complex estate matters — particularly involving mixed religion heirs, adopted children, Waqf assets, or multi-jurisdictional property — require a qualified Faraid practitioner, solicitor, or the courts. This tool is not a substitute for legal advice.',
+    'disclaimer.rule.syariah':"Quran 4:11–12, 4:176 · Shafi'i school (primary reference) · State Syariah enactments may vary",
+    'disclaimer.rule.civil': 'Distribution Act 1958 (Act 300) · Probate & Administration Act 1959 · Malaysian Law',
+    'warn.grandchildren':'Grandchildren inherit only if their parent (child of deceased) predeceased. In this calculation they are treated as additional children in the same tier — verify applicable facts.',
+    'warn.nepniece':'Nephews/Nieces inherit only if their parent (sibling of deceased) predeceased. Verify facts before distribution.',
+    'warn.noheirs':'No heirs have been entered. Please add at least one surviving heir.',
+    'warn.bayt':'No residuary (Asaba) heir found. The remaining estate goes to Bayt al-Mal (public treasury/state).',
+    'warn.shares':'The allocated shares do not sum to 100%. This may indicate a complex hajb (blocking) scenario — please verify with a qualified Faraid practitioner.',
+    'warn.bona':'No surviving heirs have been entered. Under Malaysian law, an estate with no heirs is Bona Vacantia — it escheats to the government.',
+    'bayt.label':    'Bayt al-Mal (State)',
+    'bayt.rule':     'No Asaba heir — residue to public treasury',
+  },
+
+  ms: {
+    'header.left':  'PROTOKOL WARISAN\nوارثان — Penyelesaian Harta',
+    'header.sub':   'Kalkulator Pengagihan Harta Pusaka',
+    'header.right': 'Syariah (Faraid) + Sivil\nQuran 4:11–12 · Akta Pembahagian 1958\nAlat Rujukan Konsep',
+    'hero.title':   'Kira pengagihan harta pusaka <em>dengan tepat.</em>',
+    'hero.desc':    'Masukkan nilai harta pusaka dan susunan waris. Enjin ini menggunakan hukum Faraid (Quran 4:11–12, 4:176) untuk laluan Syariah, atau Akta Pembahagian 1958 untuk laluan sivil. Keputusan adalah petunjuk — bukan nasihat undang-undang.',
+    'track.syariah':'Laluan Syariah',
+    'track.syariah.sub':'Faraid / Quran 4:11',
+    'track.civil':  'Laluan Sivil',
+    'track.civil.sub':'Akta Pembahagian 1958',
+    'section.estate':'Nilai Harta Pusaka',
+    'label.estate': 'Jumlah harta bersih (selepas hutang & perbelanjaan pengebumian)',
+    'section.deceased':'Simati',
+    'deceased.male':'Simati adalah Lelaki',
+    'deceased.male.sub':'Togol off jika simati adalah perempuan',
+    'section.spouses':'Suami/Isteri yang Masih Hidup',
+    'section.children':'Anak-anak',
+    'section.parents':'Ibu Bapa',
+    'section.siblings':'Adik-beradik (jika tiada bapa / anak)',
+    'section.grandparents':'Datuk-nenek (jika tiada waris lebih hampir)',
+    'section.spouse':'Pasangan',
+    'section.parentsib':'Ibu Bapa & Adik-beradik',
+    'section.extended':'Waris Jauh (tiada waris lebih hampir)',
+    'heir.husband':  'Suami (زوج)',
+    'heir.husband.sub':'1/4 jika ada anak; 1/2 jika tiada anak',
+    'heir.wives':    'Isteri / Isteri-isteri (زوجة)',
+    'heir.wives.sub':'1/8 jika ada anak; 1/4 jika tiada anak (maks 4)',
+    'heir.sons':     'Anak Lelaki (ابن)',
+    'heir.sons.sub': 'Asabah — 2× bahagian anak perempuan',
+    'heir.daughters':'Anak Perempuan (بنت)',
+    'heir.daughters.sub':'1/2 seorang; 2/3 jika ≥2; asabah bersama anak lelaki',
+    'heir.gsons':    'Cucu Lelaki (dari anak lelaki)',
+    'heir.gsons.sub':'Mewarisi hanya jika tiada anak lelaki langsung',
+    'heir.gdaughters':'Cucu Perempuan (dari anak lelaki)',
+    'heir.gdaughters.sub':'Mewarisi jika tiada anak langsung',
+    'heir.father':   'Bapa (أب)',
+    'heir.father.sub':'1/6 jika ada anak; asabah jika tiada anak',
+    'heir.mother':   'Ibu (أم)',
+    'heir.mother.sub':'1/6 jika ada anak; 1/3 jika tiada anak',
+    'heir.fbro':     'Adik-beradik Lelaki Kandung (أخ شقيق)',
+    'heir.fbro.sub': 'Dihijab oleh bapa atau anak lelaki',
+    'heir.fsis':     'Adik-beradik Perempuan Kandung (أخت شقيقة)',
+    'heir.fsis.sub': '1/2 seorang; 2/3 jika ≥2; asabah bersama abang',
+    'heir.pbro':     'Adik-beradik Lelaki Sebapa',
+    'heir.pbro.sub': 'Dihijab oleh bapa, anak lelaki, atau adik-beradik kandung',
+    'heir.psis':     'Adik-beradik Perempuan Sebapa',
+    'heir.psis.sub': 'Dihijab oleh bapa, anak lelaki, atau adik-beradik kandung',
+    'heir.msib':     'Adik-beradik Seibu',
+    'heir.msib.sub': '1/6 setiap seorang; 1/3 dikongsi jika ≥2',
+    'heir.pgf':      'Datuk Sebelah Bapa (جد)',
+    'heir.pgf.sub':  'Mengambil tempat bapa jika tiada bapa',
+    'heir.mgm':      'Nenek Sebelah Ibu (جدة)',
+    'heir.mgm.sub':  '1/6; dihijab oleh ibu',
+    'heir.c.spouse': 'Pasangan yang Masih Hidup',
+    'heir.c.spouse.sub':'1/4 (ada anak); 1/2 (hanya ibu bapa); baki penuh',
+    'heir.c.children':'Anak-anak (sebarang jantina)',
+    'heir.c.children.sub':'Bahagian sama rata; termasuk anak angkat',
+    'heir.c.grandchildren':'Cucu-cucu',
+    'heir.c.grandchildren.sub':'Hanya mewarisi jika ibu/bapa mereka meninggal dahulu',
+    'heir.c.parents':'Ibu Bapa (setiap satu dikira)',
+    'heir.c.parents.sub':'1/2 baki jika kedua-dua masih hidup; bahagian sama rata',
+    'heir.c.siblings':'Adik-beradik (lelaki & perempuan)',
+    'heir.c.siblings.sub':'Bahagian sama rata; hanya jika tiada zuriat langsung',
+    'heir.c.nepniece':'Anak Saudara (lelaki & perempuan)',
+    'heir.c.nepniece.sub':'Hanya jika ibu/bapa mereka (adik-beradik) meninggal dahulu',
+    'heir.c.grandparents':'Datuk-nenek',
+    'heir.c.grandparents.sub':'Hanya jika tiada ibu bapa yang masih hidup',
+    'heir.c.uncleaunt':'Bapa/Ibu Saudara',
+    'heir.c.uncleaunt.sub':'Hanya jika tiada adik-beradik',
+
+    'tab.heirs':    'Waris & Pengagihan',
+    'tab.assets':   'Lejar Aset',
+    'section.assets':'Aset Harta Pusaka',
+    'label.liabilities':'Jumlah hutang + kos pengebumian + pentadbiran',
+    'section.assetlist':'Pengisytiharan Aset',
+    'btn.addasset':  '+ Tambah Aset',
+    'btn.calculate': '⟶ Kira Pengagihan',
+    'btn.reset':     '↺ Tetapkan semula semua',
+    'empty.title':   'Menunggu konfigurasi harta pusaka',
+    'empty.hint':    'Masukkan nilai harta dan maklumat waris, kemudian kira',
+    'result.syariah.badge':'Laluan Syariah — Faraid',
+    'result.civil.badge':'Laluan Sivil — Akta Pembahagian 1958',
+    'result.net':    'Harta bersih boleh diagih',
+    'result.calculated':'Dikira',
+    'result.at':     'pada',
+    'result.indicative':'PETUNJUK SAHAJA',
+    'result.categories':'Kategori Waris',
+    'result.persons':'Jumlah Orang',
+    'result.allocated':'Bahagian Diagihkan',
+    'result.breakdown':'Pecahan Pengagihan',
+    'result.heir':   'Waris',
+    'result.share':  'Bahagian',
+    'result.basis':  'Asas',
+    'result.amount': 'Jumlah',
+    'result.persons.each':'orang',
+    'result.person.each':'orang',
+    'result.each':   'setiap seorang',
+    'blocked.title': 'Waris yang Dihijab:',
+    'blocked.note':  'Waris-waris berikut yang anda masukkan dihijab daripada mewarisi oleh waris berkeutamaan lebih tinggi:',
+    'blocked.rule':  "Peraturan: Quran 4:11–12 · Faraid Klasik — Hajb Hirman",
+    'disclaimer.title':'Penafian:',
+    'disclaimer.text':'Kalkulator ini memberikan pengagihan petunjuk berdasarkan hukum Faraid klasik (Quran 4:11–12, 4:176) dan Akta Pembahagian 1958 Malaysia. Perkara harta pusaka yang kompleks — terutamanya melibatkan waris berlainan agama, anak angkat, harta Waqf, atau harta pelbagai bidang kuasa — memerlukan pengamal Faraid yang berkelayakan, peguam, atau mahkamah. Alat ini bukan pengganti nasihat undang-undang.',
+    'disclaimer.rule.syariah':"Quran 4:11–12, 4:176 · Mazhab Syafi'i (rujukan utama) · Enakmen Syariah negeri mungkin berbeza",
+    'disclaimer.rule.civil': 'Akta Pembahagian 1958 (Akta 300) · Akta Probet & Pentadbiran 1959 · Undang-undang Malaysia',
+    'warn.grandchildren':'Cucu hanya mewarisi jika ibu/bapa mereka (anak simati) meninggal dahulu. Dalam pengiraan ini mereka dilayan sebagai anak tambahan dalam tahap yang sama — sahkan fakta yang berkenaan.',
+    'warn.nepniece':'Anak saudara hanya mewarisi jika ibu/bapa mereka (adik-beradik simati) meninggal dahulu. Sahkan fakta sebelum pengagihan.',
+    'warn.noheirs':'Tiada waris dimasukkan. Sila tambah sekurang-kurangnya seorang waris yang masih hidup.',
+    'warn.bayt':'Tiada waris Asabah ditemui. Baki harta akan pergi kepada Bayt al-Mal (perbendaharaan awam/negara).',
+    'warn.shares':'Jumlah bahagian yang diagihkan tidak mencapai 100%. Ini mungkin menunjukkan senario hajb yang kompleks — sila sahkan dengan pengamal Faraid yang berkelayakan.',
+    'warn.bona':'Tiada waris yang masih hidup dimasukkan. Di bawah undang-undang Malaysia, harta tanpa waris adalah Bona Vacantia — ia jatuh kepada kerajaan.',
+    'bayt.label':    'Bayt al-Mal (Negara)',
+    'bayt.rule':     'Tiada waris Asabah — baki kepada perbendaharaan awam',
+  },
+
+  ar: {
+    'header.left':  'بروتوكول وارثان\nحلول الميراث',
+    'header.sub':   'آلة حساب توزيع التركة',
+    'header.right': 'الشريعة (الفرائض) + المدني\nالقرآن ٤:١١–١٢ · قانون التوزيع ١٩٥٨\nأداة مرجعية',
+    'hero.title':   'احسب توزيع التركة <em>بدقّة.</em>',
+    'hero.desc':    'أدخل قيمة التركة وتفاصيل الورثة. يطبّق المحرّك أحكام الفرائض (القرآن ٤:١١–١٢، ٤:١٧٦) للمسار الشرعي، أو قانون التوزيع ١٩٥٨ للمسار المدني. النتائج إرشادية — وليست مشورة قانونية.',
+    'track.syariah':'المسار الشرعي',
+    'track.syariah.sub':'الفرائض / القرآن ٤:١١',
+    'track.civil':  'المسار المدني',
+    'track.civil.sub':'قانون التوزيع ١٩٥٨',
+    'section.estate':'قيمة التركة',
+    'label.estate': 'إجمالي صافي التركة (بعد الديون ومصاريف الجنازة)',
+    'section.deceased':'المتوفى',
+    'deceased.male':'المتوفى ذكر',
+    'deceased.male.sub':'أوقف إذا كانت المتوفاة أنثى',
+    'section.spouses':'الأزواج الأحياء',
+    'section.children':'الأبناء',
+    'section.parents':'الوالدان',
+    'section.siblings':'الإخوة والأخوات (إن لم يوجد أب أو أبناء)',
+    'section.grandparents':'الأجداد (إن لم يوجد أقرباء أقرب)',
+    'section.spouse':'الزوج/الزوجة',
+    'section.parentsib':'الوالدان والإخوة',
+    'section.extended':'الأقارب البعيدون (لا وارث أقرب)',
+    'heir.husband':  'الزوج',
+    'heir.husband.sub':'الربع إن وُجد ولد؛ النصف إن لم يوجد',
+    'heir.wives':    'الزوجة / الزوجات',
+    'heir.wives.sub':'الثمن إن وُجد ولد؛ الربع إن لم يوجد (حدّ أقصى ٤)',
+    'heir.sons':     'الأبناء (ابن)',
+    'heir.sons.sub': 'عصبة — ضعف نصيب البنت',
+    'heir.daughters':'البنات',
+    'heir.daughters.sub':'النصف لواحدة؛ الثلثان لاثنتين فأكثر؛ عصبة مع الابن',
+    'heir.gsons':    'أبناء الابن',
+    'heir.gsons.sub':'يرثون فقط إن لم يوجد ابن مباشر',
+    'heir.gdaughters':'بنات الابن',
+    'heir.gdaughters.sub':'يرثن إن لم يوجد أبناء مباشرون',
+    'heir.father':   'الأب',
+    'heir.father.sub':'السدس إن وُجد ولد؛ عصبة إن لم يوجد',
+    'heir.mother':   'الأم',
+    'heir.mother.sub':'السدس إن وُجد ولد؛ الثلث إن لم يوجد',
+    'heir.fbro':     'الإخوة الأشقاء',
+    'heir.fbro.sub': 'يُحجبون بالأب أو الابن',
+    'heir.fsis':     'الأخوات الشقيقات',
+    'heir.fsis.sub': 'النصف لواحدة؛ الثلثان لاثنتين فأكثر؛ عصبة مع الأخ',
+    'heir.pbro':     'الإخوة لأب',
+    'heir.pbro.sub': 'يُحجبون بالأب أو الابن أو الأخ الشقيق',
+    'heir.psis':     'الأخوات لأب',
+    'heir.psis.sub': 'يُحجبن بالأب أو الأخ الشقيق',
+    'heir.msib':     'الإخوة والأخوات لأم',
+    'heir.msib.sub': 'السدس لكل واحد؛ الثلث مشتركاً لاثنين فأكثر',
+    'heir.pgf':      'الجدّ لأب',
+    'heir.pgf.sub':  'يحلّ محلّ الأب عند غيابه',
+    'heir.mgm':      'الجدّة لأم',
+    'heir.mgm.sub':  'السدس؛ تُحجب بالأم',
+    'heir.c.spouse': 'الزوج/الزوجة الباقي على قيد الحياة',
+    'heir.c.spouse.sub':'١/٤ (وجد أبناء)؛ ١/٢ (الوالدان فقط)؛ الباقي كاملاً',
+    'heir.c.children':'الأبناء (أي جنس)',
+    'heir.c.children.sub':'حصص متساوية؛ يشمل الأبناء بالتبنّي',
+    'heir.c.grandchildren':'الأحفاد',
+    'heir.c.grandchildren.sub':'يرثون فقط إن توفّي والدهم قبل الموروث',
+    'heir.c.parents':'الوالدان (كلٌّ يُحسب)',
+    'heir.c.parents.sub':'نصف الباقي إن كلاهما حيّ؛ حصة متساوية',
+    'heir.c.siblings':'الإخوة والأخوات',
+    'heir.c.siblings.sub':'حصص متساوية؛ فقط إن لم يوجد فروع',
+    'heir.c.nepniece':'أبناء وبنات الإخوة',
+    'heir.c.nepniece.sub':'فقط إن توفّي والدهم (الأخ/الأخت) قبل الموروث',
+    'heir.c.grandparents':'الأجداد والجدّات',
+    'heir.c.grandparents.sub':'فقط إن لم يكن ثمة والدان أحياء',
+    'heir.c.uncleaunt':'الأعمام والعمّات والأخوال والخالات',
+    'heir.c.uncleaunt.sub':'فقط إن لم يوجد إخوة',
+
+    'tab.heirs':    'الورثة والتوزيع',
+    'tab.assets':   'سجل الأصول',
+    'section.assets':'أصول التركة',
+    'label.liabilities':'إجمالي الديون + مصاريف الجنازة + الإدارة',
+    'section.assetlist':'إقرار الأصول',
+    'btn.addasset':  '+ إضافة أصل',
+    'btn.calculate': '⟶ احسب التوزيع',
+    'btn.reset':     '↺ إعادة تعيين جميع الحقول',
+    'empty.title':   'في انتظار تهيئة التركة',
+    'empty.hint':    'أدخل قيمة التركة وبيانات الورثة، ثم احسب',
+    'result.syariah.badge':'المسار الشرعي — الفرائض',
+    'result.civil.badge':'المسار المدني — قانون التوزيع ١٩٥٨',
+    'result.net':    'صافي التركة القابل للتوزيع',
+    'result.calculated':'تاريخ الحساب',
+    'result.at':     'الساعة',
+    'result.indicative':'للإرشاد فقط',
+    'result.categories':'فئات الورثة',
+    'result.persons':'إجمالي الأشخاص',
+    'result.allocated':'الأنصبة المخصّصة',
+    'result.breakdown':'تفصيل التوزيع',
+    'result.heir':   'الوارث',
+    'result.share':  'النصيب',
+    'result.basis':  'الأساس',
+    'result.amount': 'المبلغ',
+    'result.persons.each':'أشخاص',
+    'result.person.each':'شخص',
+    'result.each':   'لكل شخص',
+    'blocked.title': 'الورثة المحجوبون (الحجب):',
+    'blocked.note':  'الورثة التاليون الذين أدخلتَهم محجوبون من الإرث بسبب وارث ذي أولوية أعلى:',
+    'blocked.rule':  "القاعدة: القرآن ٤:١١–١٢ · الفرائض الكلاسيكية — الحجب الحرمان",
+    'disclaimer.title':'تنبيه:',
+    'disclaimer.text':'يوفّر هذا الحاسب توزيعاً إرشادياً مبسّطاً وفق أحكام الفرائض الكلاسيكية (القرآن ٤:١١–١٢، ٤:١٧٦) وقانون التوزيع الماليزي لعام ١٩٥٨. تستلزم الحالات المعقّدة — لا سيما التي تشمل ورثة من أديان مختلفة، أو أبناء بالتبنّي، أو أصول الوقف، أو عقارات متعددة الاختصاص — الرجوع إلى متخصّص فرائض مؤهَّل أو محامٍ أو المحكمة. هذه الأداة ليست بديلاً عن المشورة القانونية.',
+    'disclaimer.rule.syariah':"القرآن ٤:١١–١٢، ٤:١٧٦ · المذهب الشافعي (المرجع الرئيسي) · قد تتباين أحكام الشريعة على مستوى الولايات",
+    'disclaimer.rule.civil': 'قانون التوزيع ١٩٥٨ (الفصل ٣٠٠) · قانون التحقق والإدارة ١٩٥٩ · القانون الماليزي',
+    'warn.grandchildren':'يرث الأحفاد فقط إن توفّي والدهم (ابن/بنت الموروث) قبله. في هذا الحساب يُعاملون كأبناء إضافيين في نفس الدرجة — تحقّق من الوقائع المنطبقة.',
+    'warn.nepniece':'يرث أبناء وبنات الإخوة فقط إن توفّي والدهم (الأخ/الأخت) قبل الموروث. تحقّق من الوقائع قبل التوزيع.',
+    'warn.noheirs':'لم يُدخَل أيّ وارث. يُرجى إضافة وارث حيّ واحد على الأقل.',
+    'warn.bayt':'لم يُعثر على وارث عصبة. يذهب الباقي إلى بيت المال.',
+    'warn.shares':'لا تبلغ مجموع الأنصبة المخصّصة ١٠٠٪. قد يدلّ هذا على سيناريو حجب معقّد — يُرجى التحقّق مع متخصّص فرائض مؤهَّل.',
+    'warn.bona':'لم يُدخَل أيّ وارث حيّ. وفق القانون الماليزي، تؤول التركة التي لا وارث لها إلى الحكومة (Bona Vacantia).',
+    'bayt.label':    'بيت المال (الدولة)',
+    'bayt.rule':     'لا وارث عصبة — الباقي لبيت المال',
+  }
+};
+
+// ═══════════════════════════════════════════
+// LANG STATE
+// ═══════════════════════════════════════════
+let lang = 'en';
+
+function t(key){ return (T[lang] && T[lang][key]) || T.en[key] || key; }
+
+function toggleLangMenu(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('lang-dropdown');
+  dd.classList.toggle('open');
+}
+
+function pickLang(l) {
+  // close menu
+  document.getElementById('lang-dropdown').classList.remove('open');
+  setLang(l);
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', function() {
+  const dd = document.getElementById('lang-dropdown');
+  if(dd) dd.classList.remove('open');
+});
+
+function setLang(l) {
+  lang = l;
+  const html = document.documentElement;
+  html.setAttribute('lang', l);
+  html.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
+
+  // Update dropdown: active option + trigger label
+  document.querySelectorAll('.lang-option').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === l);
+  });
+  const labels = { en: 'English', ms: 'Bahasa', ar: 'عربي' };
+  const lbl = document.getElementById('lang-current-label');
+  if(lbl) {
+    lbl.textContent = labels[l] || 'English';
+    lbl.style.fontFamily = l === 'ar' ? 'var(--arabic-font)' : '';
+    lbl.style.fontSize   = l === 'ar' ? '0.85rem' : '';
+  }
+
+  // Update all data-t elements
+  document.querySelectorAll('[data-t]').forEach(el => {
+    const key = el.dataset.t;
+    el.textContent = t(key);
+  });
+
+  // Header left/right (multiline)
+  const hl = document.getElementById('h-left');
+  if(hl) hl.innerHTML = t('header.left').replace(/\n/g,'<br>');
+  const hr = document.getElementById('h-right');
+  if(hr) hr.innerHTML = t('header.right').replace(/\n/g,'<br>');
+
+  // Hero title (has em tag)
+  const ht = document.getElementById('hero-title');
+  if(ht) ht.innerHTML = t('hero.title');
+
+  // Estate input placeholder
+  const ev = document.getElementById('estate-val');
+  if(ev) ev.placeholder = l==='ar' ? 'مثلاً ٥٠٠٠٠٠' : l==='ms' ? 'cth. 500000' : 'e.g. 500000';
+
+  // Re-render asset list if in that panel
+  if(activePanel==='assets') renderAssetList();
+
+  // If results already showing, re-render with new lang
+  const rw = document.getElementById('results-wrap');
+  if(rw && rw.style.display !== 'none' && lastResult) {
+    if(activePanel==='heirs') renderResults(lastEstate, lastResult);
+  }
+}
+
+// ═══════════════════════════════════════════
+// CALCULATOR STATE
+// ═══════════════════════════════════════════
+let track = 'syariah';
+let lastResult = null;
+let lastEstate = 0;
+
+const counts = {
+  's-husband':0,'s-wives':0,'s-sons':0,'s-daughters':0,
+  's-gsons':0,'s-gdaughters':0,'s-father':0,'s-mother':0,
+  's-fbro':0,'s-fsis':0,'s-pbro':0,'s-psis':0,'s-msib':0,
+  's-pgf':0,'s-mgm':0,
+  'c-spouse':0,'c-children':0,'c-grandchildren':0,'c-parents':0,
+  'c-siblings':0,'c-nepniece':0,'c-grandparents':0,'c-uncleaunt':0,
+};
+
+function g(id){ return document.getElementById(id); }
+function cv(key){ return counts[key]||0; }
+function isMale(){ return g('s-male').checked; }
+
+function adj(key, delta){
+  const maxMap={'s-husband':1,'s-father':1,'s-mother':1,'s-pgf':1,'s-mgm':1,'s-wives':4,'c-spouse':1,'c-parents':2};
+  const max = maxMap[key]!==undefined ? maxMap[key] : 20;
+  counts[key] = Math.max(0, Math.min(max, (counts[key]||0)+delta));
+  const el = g('val-'+key);
+  if(el) el.textContent = counts[key];
+  const row = el && el.closest('.heir-row');
+  if(row) row.classList.toggle('active', counts[key]>0);
+}
+
+function setTrack(tr){
+  track = tr;
+  g('btn-syariah').classList.toggle('active', tr==='syariah');
+  g('btn-civil').classList.toggle('active', tr==='civil');
+  g('syariah-inputs').style.display = tr==='syariah' ? '' : 'none';
+  g('civil-inputs').style.display = tr==='civil' ? '' : 'none';
+  g('empty-state').style.display='flex';
+  g('results-wrap').style.display='none';
+  lastResult=null;
+  assets=[];
+  assetIdCounter=0;
+  const al=g('asset-list');
+  if(al) al.innerHTML='';
+  const lv=g('liabilities-val');
+  if(lv) lv.value='';
+}
+
+function resetAll(){
+  Object.keys(counts).forEach(k=>{ counts[k]=0; const el=g('val-'+k); if(el) el.textContent=0; });
+  document.querySelectorAll('.heir-row').forEach(r=>r.classList.remove('active'));
+  g('estate-val').value='';
+  g('s-male').checked=true;
+  g('empty-state').style.display='flex';
+  g('results-wrap').style.display='none';
+  lastResult=null;
+}
+
+function fmt(n){ return 'RM '+n.toLocaleString('en-MY',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function fmtShort(n){ if(n>=1e6) return 'RM '+(n/1e6).toFixed(2)+'M'; if(n>=1e3) return 'RM '+(n/1e3).toFixed(1)+'K'; return fmt(n); }
+function fmtFrac(a,b){ if(b===0)return ''; const g2=gcd(a,b); return (a/g2)+'/'+(b/g2); }
+function gcd(a,b){ return b===0?a:gcd(b,a%b); }
+function pct(s){ return (s*100).toFixed(2)+'%'; }
+
+// ═══════════════════════════════════════════
+// FARAID ENGINE
+// ═══════════════════════════════════════════
+function calcFaraid(estate){
+  const male=isMale();
+  const h={ husband:cv('s-husband'),wives:cv('s-wives'),sons:cv('s-sons'),daughters:cv('s-daughters'),gsons:cv('s-gsons'),gdaughters:cv('s-gdaughters'),father:cv('s-father'),mother:cv('s-mother'),fbro:cv('s-fbro'),fsis:cv('s-fsis'),pbro:cv('s-pbro'),psis:cv('s-psis'),msib:cv('s-msib'),pgf:cv('s-pgf'),mgm:cv('s-mgm') };
+  const hasDirectSon=h.sons>0, hasDirectDaughter=h.daughters>0, hasDirectChild=hasDirectSon||hasDirectDaughter;
+  const gsonsActive=!hasDirectSon?h.gsons:0, gdaughtersActive=!hasDirectSon?h.gdaughters:0;
+  const hasDescendantEff=hasDirectChild||gsonsActive>0||gdaughtersActive>0;
+  const pgfActive=(h.father===0)?h.pgf:0, mgmActive=(h.mother===0)?h.mgm:0;
+  const fatherOrGf=(h.father>0||pgfActive>0);
+  const siblingsBlocked=fatherOrGf||hasDirectSon||gsonsActive>0;
+  const fbroActive=siblingsBlocked?0:h.fbro, fsisActive=siblingsBlocked?0:h.fsis;
+  const pbroActive=(siblingsBlocked||fbroActive>0)?0:h.pbro, psisActive=(siblingsBlocked||fbroActive>0||fsisActive>0)?0:h.psis;
+  const msibActive=(fatherOrGf||hasDescendantEff)?0:h.msib;
+  const husbandActive=(!male)?h.husband:0, wivesActive=male?h.wives:0;
+
+  let alloc=[];
+  if(husbandActive>0) alloc.push({label:t('heir.husband').replace(/ \(زوج\)/,''),key:'husband',count:husbandActive,frac:hasDescendantEff?[1,4]:[1,2],type:'fixed',rule:hasDescendantEff?'1/4':'1/2'});
+  if(wivesActive>0)   alloc.push({label:t('heir.wives').replace(/ \(.*\)/,''),key:'wives',count:wivesActive,frac:hasDescendantEff?[1,8]:[1,4],type:'fixed',shared:true,rule:hasDescendantEff?'1/8':'1/4'});
+  if(h.father>0)      alloc.push({label:t('heir.father').replace(/ \(.*\)/,''),key:'father',count:1,frac:[1,6],type:hasDescendantEff?'fixed':'fixed+residue',rule:hasDescendantEff?'1/6':'1/6 + residue'});
+  if(h.mother>0)      alloc.push({label:t('heir.mother').replace(/ \(.*\)/,''),key:'mother',count:1,frac:(hasDescendantEff||(h.fbro+h.fsis+h.pbro+h.psis+h.msib)>=2)?[1,6]:[1,3],type:'fixed',rule:hasDescendantEff?'1/6':'1/3'});
+  if(pgfActive>0&&h.father===0) alloc.push({label:t('heir.pgf').replace(/ \(.*\)/,''),key:'pgf',count:1,frac:[1,6],type:hasDescendantEff?'fixed':'fixed+residue',rule:hasDescendantEff?'1/6':'1/6 + residue'});
+  if(mgmActive>0)     alloc.push({label:t('heir.mgm').replace(/ \(.*\)/,''),key:'mgm',count:1,frac:[1,6],type:'fixed',rule:'1/6'});
+  if(hasDirectDaughter&&!hasDirectSon) alloc.push({label:h.daughters===1?t('heir.daughters').replace(/ \(.*\)/,''):t('heir.daughters').replace(/ \(.*\)/,''),key:'daughters',count:h.daughters,frac:h.daughters===1?[1,2]:[2,3],type:'fixed',shared:h.daughters>1,rule:h.daughters===1?'1/2':'2/3'});
+  if(gdaughtersActive>0&&gsonsActive===0&&!hasDirectChild) alloc.push({label:t('heir.gdaughters').replace(/ \(.*\)/,''),key:'gdaughters',count:gdaughtersActive,frac:gdaughtersActive===1?[1,2]:[2,3],type:'fixed',shared:gdaughtersActive>1,rule:gdaughtersActive===1?'1/2':'2/3'});
+  if(msibActive>0)    alloc.push({label:t('heir.msib').replace(/ \(.*\)/,''),key:'msib',count:msibActive,frac:msibActive===1?[1,6]:[1,3],type:'fixed',shared:msibActive>1,rule:msibActive===1?'1/6':'1/3'});
+  if(fsisActive>0&&fbroActive===0&&!hasDescendantEff) alloc.push({label:t('heir.fsis').replace(/ \(.*\)/,''),key:'fsis',count:fsisActive,frac:fsisActive===1?[1,2]:[2,3],type:'fixed',shared:fsisActive>1,rule:fsisActive===1?'1/2':'2/3'});
+  if(psisActive>0&&pbroActive===0&&!hasDescendantEff&&h.father===0&&fbroActive===0&&fsisActive===0) alloc.push({label:t('heir.psis').replace(/ \(.*\)/,''),key:'psis',count:psisActive,frac:psisActive===1?[1,2]:[2,3],type:'fixed',shared:psisActive>1,rule:psisActive===1?'1/2':'2/3'});
+
+  let fixedSum=0;
+  alloc.forEach(a=>{if(a.type==='fixed'||a.type==='fixed+residue') fixedSum+=a.frac[0]/a.frac[1];});
+  const residuaryAmount=Math.max(0,1-fixedSum);
+
+  let residuaryHeirs=[];
+  if(hasDirectSon||hasDirectChild){
+    residuaryHeirs.push({label:hasDirectDaughter&&hasDirectSon?'sons_daughters':(h.sons>1?t('heir.sons').replace(/ \(.*\)/,''):t('heir.sons').replace(/ \(.*\)/,'')),key:'sons',sons:h.sons,daughters:hasDirectSon?h.daughters:0,type:'asaba_children'});
+  } else if(gsonsActive>0||gdaughtersActive>0){
+    residuaryHeirs.push({key:'gsons',sons:gsonsActive,daughters:gdaughtersActive,type:'asaba_children'});
+  }
+  const fatherItem=alloc.find(a=>a.key==='father'), pgfItem=alloc.find(a=>a.key==='pgf');
+  if(fatherItem&&fatherItem.type==='fixed+residue') residuaryHeirs.push({label:t('heir.father').replace(/ \(.*\)/,''),key:'father_res',count:1,type:'asaba_simple'});
+  else if(pgfItem&&pgfItem.type==='fixed+residue') residuaryHeirs.push({label:t('heir.pgf').replace(/ \(.*\)/,''),key:'pgf_res',count:1,type:'asaba_simple'});
+  else if(fbroActive>0||fsisActive>0) residuaryHeirs.push({key:'fbro',bros:fbroActive,sis:fsisActive,type:'asaba_sibling'});
+  else if(pbroActive>0||psisActive>0) residuaryHeirs.push({key:'pbro',bros:pbroActive,sis:psisActive,type:'asaba_sibling'});
+
+  const hasAsaba=residuaryHeirs.length>0;
+  let rows=[],warnings=[],blocked=[];
+
+  alloc.forEach(a=>{
+    if(a.type==='fixed'||a.type==='fixed+residue'){
+      const sv=a.frac[0]/a.frac[1];
+      rows.push({label:a.label,count:a.count,fracStr:fmtFrac(a.frac[0],a.frac[1]),pctStr:pct(sv),totalAmount:estate*sv,perPerson:a.shared?estate*sv/a.count:estate*sv,rule:a.rule,color:'jade',shareVal:sv});
+    }
+  });
+
+  if(hasAsaba&&residuaryAmount>0){
+    residuaryHeirs.forEach(rh=>{
+      if(rh.type==='asaba_children'){
+        const units=rh.sons*2+(rh.daughters||0);
+        const uv=units>0?residuaryAmount/units:0;
+        if(rh.sons>0) rows.push({label:rh.sons===1?t('heir.sons').replace(/ \(.*\)/,''):t('heir.sons').replace(/ \(.*\)/,''),count:rh.sons,fracStr:'('+t('result.share')+')',pctStr:pct(uv*rh.sons*2),totalAmount:estate*uv*rh.sons*2,perPerson:estate*uv*2,rule:'Asaba — 2x',color:'jade',shareVal:uv*rh.sons*2,isResiduary:true});
+        if(rh.daughters>0&&rh.sons>0) rows.push({label:t('heir.daughters').replace(/ \(.*\)/,''),count:rh.daughters,fracStr:'('+t('result.share')+')',pctStr:pct(uv*rh.daughters),totalAmount:estate*uv*rh.daughters,perPerson:estate*uv,rule:'Asaba — 1x',color:'jade',shareVal:uv*rh.daughters,isResiduary:true});
+      } else if(rh.type==='asaba_simple'){
+        rows.push({label:rh.label,count:rh.count||1,fracStr:'('+t('result.share')+')',pctStr:pct(residuaryAmount),totalAmount:estate*residuaryAmount,perPerson:estate*residuaryAmount/(rh.count||1),rule:'Asaba',color:'jade',shareVal:residuaryAmount,isResiduary:true});
+      } else if(rh.type==='asaba_sibling'){
+        const units=rh.bros*2+rh.sis,uv=units>0?residuaryAmount/units:0;
+        if(rh.bros>0) rows.push({label:t('heir.fbro').replace(/ \(.*\)/,''),count:rh.bros,fracStr:'(Asaba)',pctStr:pct(uv*rh.bros*2),totalAmount:estate*uv*rh.bros*2,perPerson:estate*uv*2,rule:'Asaba 2x',color:'jade',shareVal:uv*rh.bros*2,isResiduary:true});
+        if(rh.sis>0) rows.push({label:t('heir.fsis').replace(/ \(.*\)/,''),count:rh.sis,fracStr:'(Asaba)',pctStr:pct(uv*rh.sis),totalAmount:estate*uv*rh.sis,perPerson:estate*uv,rule:'Asaba 1x',color:'jade',shareVal:uv*rh.sis,isResiduary:true});
+      }
+    });
+  } else if(!hasAsaba&&residuaryAmount>0.001){
+    rows.push({label:t('bayt.label'),count:1,fracStr:fmtFrac(Math.round(residuaryAmount*100),100),pctStr:pct(residuaryAmount),totalAmount:estate*residuaryAmount,perPerson:estate*residuaryAmount,rule:t('bayt.rule'),color:'gold',shareVal:residuaryAmount,isBayt:true});
+    warnings.push(t('warn.bayt'));
+  }
+
+  if(rows.length===0) warnings.push(t('warn.noheirs'));
+  const ts=rows.reduce((s,r)=>s+r.shareVal,0);
+  if(Math.abs(ts-1)>0.01&&rows.length>0) warnings.push(t('warn.shares'));
+
+  if(h.gsons>0&&gsonsActive===0) blocked.push(t('heir.gsons').replace(/ \(.*\)/,''));
+  if(h.gdaughters>0&&gdaughtersActive===0) blocked.push(t('heir.gdaughters').replace(/ \(.*\)/,''));
+  if(h.pgf>0&&pgfActive===0) blocked.push(t('heir.pgf').replace(/ \(.*\)/,''));
+  if(h.mgm>0&&mgmActive===0) blocked.push(t('heir.mgm').replace(/ \(.*\)/,''));
+  if((h.fbro>0&&fbroActive===0)||(h.fsis>0&&fsisActive===0)) blocked.push(t('heir.fbro').replace(/ \(.*\)/,'')+' / '+t('heir.fsis').replace(/ \(.*\)/,''));
+  if((h.pbro>0&&pbroActive===0)||(h.psis>0&&psisActive===0)) blocked.push(t('heir.pbro').replace(/ \(.*\)/,''));
+  if(h.msib>0&&msibActive===0) blocked.push(t('heir.msib').replace(/ \(.*\)/,''));
+
+  return{rows,warnings,blocked,track:'syariah',totalShares:ts};
+}
+
+// ═══════════════════════════════════════════
+// CIVIL ENGINE
+// ═══════════════════════════════════════════
+function calcCivil(estate){
+  const h={spouse:cv('c-spouse'),children:cv('c-children'),grandchildren:cv('c-grandchildren'),parents:cv('c-parents'),siblings:cv('c-siblings'),nepniece:cv('c-nepniece'),grandparents:cv('c-grandparents'),uncleaunt:cv('c-uncleaunt')};
+  const ec=h.children+h.grandchildren, hasC=ec>0;
+  let rows=[],warnings=[],blocked=[];
+
+  if(h.spouse>0&&hasC){
+    rows.push({label:t('heir.c.spouse'),count:1,fracStr:'1/4',pctStr:pct(1/4),totalAmount:estate/4,perPerson:estate/4,rule:'1/4',color:'rust',shareVal:1/4});
+    rows.push({label:t('heir.c.children'),count:ec,fracStr:'3/4',pctStr:pct(3/4/ec),totalAmount:estate*3/4,perPerson:estate*3/4/ec,rule:'3/4',color:'rust',shareVal:3/4});
+  } else if(h.spouse>0&&!hasC&&h.parents>0){
+    rows.push({label:t('heir.c.spouse'),count:1,fracStr:'1/2',pctStr:pct(1/2),totalAmount:estate/2,perPerson:estate/2,rule:'1/2',color:'rust',shareVal:1/2});
+    rows.push({label:t('heir.c.parents'),count:h.parents,fracStr:'1/2',pctStr:pct(1/2/h.parents),totalAmount:estate/2,perPerson:estate/2/h.parents,rule:'1/2',color:'rust',shareVal:1/2});
+  } else if(h.spouse>0&&!hasC&&h.parents===0&&(h.siblings>0||h.nepniece>0)){
+    const st=h.siblings+h.nepniece;
+    rows.push({label:t('heir.c.spouse'),count:1,fracStr:'1/2',pctStr:pct(1/2),totalAmount:estate/2,perPerson:estate/2,rule:'1/2',color:'rust',shareVal:1/2});
+    rows.push({label:t('heir.c.siblings'),count:st,fracStr:'1/2',pctStr:pct(1/2/st),totalAmount:estate/2,perPerson:estate/2/st,rule:'1/2',color:'rust',shareVal:1/2});
+  } else if(h.spouse>0&&!hasC&&h.parents===0&&h.siblings===0&&h.nepniece===0){
+    rows.push({label:t('heir.c.spouse'),count:1,fracStr:'Full',pctStr:'100%',totalAmount:estate,perPerson:estate,rule:'Full',color:'rust',shareVal:1});
+  } else if(!h.spouse&&hasC){
+    rows.push({label:t('heir.c.children'),count:ec,fracStr:'Full',pctStr:pct(1/ec),totalAmount:estate,perPerson:estate/ec,rule:'Full',color:'rust',shareVal:1});
+  } else if(!h.spouse&&!hasC&&h.parents>0){
+    rows.push({label:t('heir.c.parents'),count:h.parents,fracStr:'Full',pctStr:pct(1/h.parents),totalAmount:estate,perPerson:estate/h.parents,rule:'Full',color:'rust',shareVal:1});
+    if(h.siblings>0) blocked.push(t('heir.c.siblings'));
+  } else if(!h.spouse&&!hasC&&h.parents===0&&(h.siblings>0||h.nepniece>0)){
+    const st=h.siblings+h.nepniece;
+    rows.push({label:t('heir.c.siblings'),count:st,fracStr:'Full',pctStr:pct(1/st),totalAmount:estate,perPerson:estate/st,rule:'Full',color:'rust',shareVal:1});
+  } else if(!h.spouse&&!hasC&&h.parents===0&&h.siblings===0&&h.nepniece===0&&h.grandparents>0){
+    rows.push({label:t('heir.c.grandparents'),count:h.grandparents,fracStr:'Full',pctStr:pct(1/h.grandparents),totalAmount:estate,perPerson:estate/h.grandparents,rule:'Full',color:'rust',shareVal:1});
+  } else if(h.uncleaunt>0){
+    rows.push({label:t('heir.c.uncleaunt'),count:h.uncleaunt,fracStr:'Full',pctStr:pct(1/h.uncleaunt),totalAmount:estate,perPerson:estate/h.uncleaunt,rule:'Full',color:'rust',shareVal:1});
+  } else {
+    warnings.push(t('warn.bona'));
+  }
+  if(h.grandchildren>0) warnings.push(t('warn.grandchildren'));
+  if(h.nepniece>0) warnings.push(t('warn.nepniece'));
+  return{rows,warnings,blocked,track:'civil',totalShares:rows.reduce((s,r)=>s+r.shareVal,0)};
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function calculate(){
+  if(activePanel==='assets'){ calculateAssets(); return; }
+  const ev=parseFloat(g('estate-val').value);
+  if(!ev||ev<=0){ alert(lang==='ar'?'يُرجى إدخال قيمة صحيحة للتركة أكبر من صفر.':lang==='ms'?'Sila masukkan nilai harta pusaka yang sah melebihi 0.':'Please enter a valid estate value greater than 0.'); return; }
+  lastEstate=ev;
+  lastResult=track==='syariah'?calcFaraid(ev):calcCivil(ev);
+  renderResults(ev,lastResult);
+}
+
+function renderResults(estate,result){
+  g('empty-state').style.display='none';
+  const wrap=g('results-wrap');
+  wrap.style.display='flex';
+  wrap.innerHTML='';
+
+  const now=new Date();
+  const dateStr=now.toLocaleDateString(lang==='ar'?'ar-MA':lang==='ms'?'ms-MY':'en-MY',{day:'2-digit',month:'short',year:'numeric'});
+  const timeStr=now.toLocaleTimeString('en-MY',{hour:'2-digit',minute:'2-digit'});
+  const trackBadge=result.track==='syariah'?t('result.syariah.badge'):t('result.civil.badge');
+  const trackColor=result.track==='syariah'?'jade':'rust';
+  const totalHeirs=result.rows.reduce((s,r)=>s+(r.count||1),0);
+
+  const segColors=result.track==='syariah'
+    ?['2a5c45','3a7a5e','4a9a6e','5aaa7e','1a4c35','6aba8e','0a3c25','7aca9e']
+    :['8b3a2a','a84a38','c05a46','7a2a1a','d06a56','6a1a0a','b05040','903020'];
+  const segments=result.rows.map((r,i)=>
+    `<div class="dist-visual-seg" style="flex:${Math.round(r.shareVal*1000)};background:#${segColors[i%segColors.length]};" title="${r.label}: ${r.pctStr}">${r.shareVal>0.1?r.label.split(' ')[0]:''}</div>`
+  ).join('');
+
+  const tableRows=result.rows.map(r=>`
+    <tr class="${r.isBayt?'residue-row':''}">
+      <td>
+        <div class="dist-heir-name">${r.label}</div>
+        <div class="dist-heir-count">${r.count>1?r.count+' '+t('result.persons.each'):'1 '+t('result.person.each')}</div>
+      </td>
+      <td>
+        <div class="dist-fraction ${result.track==='civil'?'civil-frac':''}">${r.fracStr}</div>
+        <div class="dist-pct">${r.pctStr}</div>
+        <div class="share-bar-wrap"><div class="share-bar" style="width:80px;"><div class="share-bar-fill ${result.track==='civil'?'civil-bar':''}" style="width:${Math.min(100,r.shareVal*100)}%;"></div></div></div>
+      </td>
+      <td><div style="font-family:'DM Mono',monospace;font-size:0.65rem;color:rgba(13,13,13,0.4);margin-bottom:0.1rem;">${r.rule}</div></td>
+      <td>
+        <div class="dist-amount">${fmt(r.totalAmount)}</div>
+        ${r.count>1?`<div class="dist-per-person">${fmt(r.perPerson)} ${t('result.each')}</div>`:''}
+      </td>
+    </tr>`).join('');
+
+  const blockedHTML=result.blocked&&result.blocked.length>0?`
+    <div class="info-box">
+      <p><strong>${t('blocked.title')}</strong> ${t('blocked.note')} <em>${result.blocked.join('; ')}</em>.</p>
+      <div class="rule-cite">${t('blocked.rule')}</div>
+    </div>`:'';
+
+  const warningsHTML=result.warnings.map(w=>`<div class="info-box warn"><p>${w}</p></div>`).join('');
+
+  const tags=result.rows.map(r=>`<span class="heir-tag ${result.track==='syariah'?'syariah-tag':'civil-tag'}">${r.label}${r.count>1?' ×'+r.count:''}</span>`).join('');
+
+  wrap.innerHTML=`
+    <div class="result-header">
+      <div>
+        <span class="result-track-badge ${trackColor}">${trackBadge}</span>
+        <div class="result-estate-val">${fmtShort(estate)}</div>
+        <div class="result-estate-label">${t('result.net')}</div>
+      </div>
+      <div class="result-timestamp">
+        ${t('result.calculated')} ${dateStr}<br>${t('result.at')} ${timeStr}<br>
+        <span style="color:var(--gold);font-size:0.55rem;">${t('result.indicative')}</span>
+      </div>
+    </div>
+    <div class="estate-stats">
+      <div class="estat-cell"><div class="estat-val">${result.rows.length}</div><div class="estat-lbl">${t('result.categories')}</div></div>
+      <div class="estat-cell"><div class="estat-val">${totalHeirs}</div><div class="estat-lbl">${t('result.persons')}</div></div>
+      <div class="estat-cell"><div class="estat-val">${pct(result.totalShares)}</div><div class="estat-lbl">${t('result.allocated')}</div></div>
+    </div>
+    ${tags?`<div class="heir-tags">${tags}</div>`:''}
+    <div class="dist-visual">${segments}</div>
+    <div>
+      <div class="dist-section-title">${t('result.breakdown')}</div>
+      <table class="dist-table">
+        <thead><tr><th>${t('result.heir')}</th><th>${t('result.share')}</th><th>${t('result.basis')}</th><th>${t('result.amount')}</th></tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+    ${blockedHTML}
+    ${warningsHTML}
+    <div class="info-box">
+      <p><strong>${t('disclaimer.title')}</strong> ${t('disclaimer.text')}</p>
+      <div class="rule-cite">${result.track==='syariah'?t('disclaimer.rule.syariah'):t('disclaimer.rule.civil')}</div>
+    </div>`;
+}
+
+
+// ═══════════════════════════════════════════════════════
+// ASSET LEDGER STATE
+// ═══════════════════════════════════════════════════════
+let assets = []; // [{id, name, type, appraised, mode, urgency}]
+let assetIdCounter = 0;
+let activePanel = 'heirs';
+
+const ASSET_TYPES = ['cash','property','vehicle','shares','business','other'];
+const MODES = ['A','B','C'];
+const DISCOUNT_MAP = {
+  // mode A
+  A: { 0:0, 1:0.10, 2:0.20, 3:0.40 },
+  B: { 0:0, 1:0.05, 2:0.12, 3:0.20 },
+  C: { 0:0.05, 1:0.10, 2:0.15, 3:0.20 },
+};
+// urgency labels
+const URGENCY_LABELS = {
+  en: ['Voluntary (6–12 mo)', 'Court Order (3–6 mo)', 'Forced (< 3 mo)', 'Distress Sale'],
+  ms: ['Sukarela (6–12 bln)', 'Perintah Mahkamah', 'Paksaan (< 3 bln)', 'Jualan Tertekan'],
+  ar: ['طوعي (٦–١٢ شهراً)', 'أمر المحكمة', 'إجباري (< ٣ أشهر)', 'بيع متعثر'],
+};
+const ASSET_TYPE_LABELS = {
+  en: {cash:'Cash / Bank',property:'Property',vehicle:'Vehicle',shares:'Shares / Securities',business:'Business Interest',other:'Other'},
+  ms: {cash:'Tunai / Bank',property:'Hartanah',vehicle:'Kenderaan',shares:'Saham / Sekuriti',business:'Kepentingan Perniagaan',other:'Lain-lain'},
+  ar: {cash:'نقد / بنك',property:'عقار',vehicle:'مركبة',shares:'أسهم / أوراق مالية',business:'حصة تجارية',other:'أخرى'},
+};
+const MODE_LABELS = {
+  en: {A:'Collective Sale',B:'Buyout',C:'Co-ownership (Musyaʿ)'},
+  ms: {A:'Jualan Bersama',B:'Buyout',C:'Milik Bersama (Musyaʿ)'},
+  ar: {A:'بيع جماعي',B:'افتداء',C:'مشاع'},
+};
+
+function switchPanel(p) {
+  activePanel = p;
+  g('tab-heirs').classList.toggle('active', p==='heirs');
+  g('tab-assets').classList.toggle('active', p==='assets');
+
+  const heirInputs = ['btn-syariah','btn-civil','syariah-inputs','civil-inputs'].concat(
+    ['section-label-estate','estate-input-wrap','heir-sections']
+  );
+  // Simpler: show/hide whole sections
+  const trackSel = document.querySelector('.track-selector');
+  const syarahDiv = g('syariah-inputs');
+  const civilDiv = g('civil-inputs');
+  const estateDiv = g('main-estate-wrap');
+  const assetPnl = g('asset-panel');
+
+  if(p==='heirs') {
+    if(trackSel) trackSel.style.display='';
+    if(estateDiv) estateDiv.style.display='';
+    // show correct track
+    if(syarahDiv) syarahDiv.style.display = track==='syariah' ? '' : 'none';
+    if(civilDiv) civilDiv.style.display = track==='civil' ? '' : 'none';
+    if(assetPnl) assetPnl.style.display='none';
+    // re-apply section labels visibility
+    document.querySelectorAll('.left-panel > .section-label').forEach(el => el.style.display='');
+  } else {
+    if(trackSel) trackSel.style.display='none';
+    if(syarahDiv) syarahDiv.style.display='none';
+    if(civilDiv) civilDiv.style.display='none';
+    if(estateDiv) estateDiv.style.display='none';
+    if(assetPnl) assetPnl.style.display='';
+    renderAssetList();
+  }
+  // hide results when switching panel
+  g('empty-state').style.display='flex';
+  g('results-wrap').style.display='none';
+  lastResult=null;
+}
+
+function addAsset() {
+  const id = ++assetIdCounter;
+  assets.push({ id, name:'Asset '+id, type:'property', appraised:0, mode:'A', urgency:0 });
+  renderAssetList();
+}
+
+function removeAsset(id) {
+  assets = assets.filter(a=>a.id!==id);
+  renderAssetList();
+}
+
+function updateAsset(id, field, val) {
+  const a = assets.find(x=>x.id===id);
+  if(a) { a[field] = field==='appraised'||field==='urgency' ? parseFloat(val)||0 : val; }
+  if(field==='mode'||field==='type') renderAssetList();
+  else { const card=document.querySelector('.asset-card[data-id="'+id+'"]'); if(card) card.classList.toggle('active-card', a.appraised>0); }
+}
+
+function renderAssetList() {
+  const list = g('asset-list');
+  if(!list) return;
+  if(assets.length===0) {
+    list.innerHTML='<div style="padding:0.8rem;text-align:center;font-family:'DM Mono',monospace;font-size:0.6rem;color:rgba(13,13,13,0.25);">'+(lang==='ar'?'لا توجد أصول مضافة':lang==='ms'?'Tiada aset ditambah':'No assets added')+'</div>';
+    return;
+  }
+  const tl = ASSET_TYPE_LABELS[lang]||ASSET_TYPE_LABELS.en;
+  const ml = MODE_LABELS[lang]||MODE_LABELS.en;
+  const ul = URGENCY_LABELS[lang]||URGENCY_LABELS.en;
+  list.innerHTML = assets.map(a => {
+    const showUrgency = a.mode==='A';
+    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
+    const adjVal = a.appraised * (1-disc);
+    return \`<div class="asset-card \${a.appraised>0?'active-card':''}" data-id="\${a.id}">
+      <div class="asset-card-head">
+        <input class="asset-name-input" value="\${a.name}" oninput="updateAsset(\${a.id},'name',this.value)" placeholder="Asset name">
+        <button class="asset-del-btn" onclick="removeAsset(\${a.id})" title="Remove">✕</button>
+      </div>
+      <div class="asset-row2">
+        <div>
+          <div class="asset-field-label">\${lang==='ar'?'النوع':lang==='ms'?'Jenis':'Type'}</div>
+          <select class="asset-select" onchange="updateAsset(\${a.id},'type',this.value)">
+            \${ASSET_TYPES.map(t=>\`<option value="\${t}" \${a.type===t?'selected':''}>\${tl[t]||t}</option>\`).join('')}
+          </select>
+        </div>
+        <div>
+          <div class="asset-field-label">\${lang==='ar'?'القيمة المقدّرة':lang==='ms'?'Nilai Taksiran':'Appraised Value'}</div>
+          <div class="rm-input-wrap" style="border:1px solid var(--line);">
+            <span class="rm-prefix">RM</span>
+            <input type="number" class="asset-val-input" value="\${a.appraised||''}" min="0" step="1000"
+              oninput="updateAsset(\${a.id},'appraised',this.value)" placeholder="0">
+          </div>
+        </div>
+      </div>
+      <div class="asset-row3">
+        <div class="asset-field-label" style="margin-bottom:0.3rem;">\${lang==='ar'?'وضع الحل':lang==='ms'?'Mod Penyelesaian':'Resolution Mode'}</div>
+        <div class="mode-btns">
+          \${MODES.map(m=>\`<button class="mode-btn mode-\${m} \${a.mode===m?'sel':''}"
+            onclick="updateAsset(\${a.id},'mode','\${m}')">\${m}: \${ml[m]}</button>\`).join('')}
+        </div>
+      </div>
+      <div class="asset-urgency-row \${showUrgency?'show':''}">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="asset-field-label">\${lang==='ar'?'الاستعجال':lang==='ms'?'Keterdesakan':'Sale Urgency'}</div>
+          <span class="discount-note">−\${(disc*100).toFixed(0)}% discount</span>
+        </div>
+        <input type="range" class="urgency-slider" min="0" max="3" step="1" value="\${a.urgency}"
+          oninput="updateAsset(\${a.id},'urgency',this.value)">
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.4);">\${ul[a.urgency]||''}</div>
+      </div>
+      \${a.appraised>0?(\`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem;padding-top:0.4rem;border-top:1px solid var(--line);">
+        <span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.35);">\${lang==='ar'?'القيمة المعدّلة':lang==='ms'?'Nilai Terlaras':'Adjusted Value'}</span>
+        <span class="adj-val">\${fmt(adjVal)}</span>
+      </div>\`):''}
+    </div>\`;
+  }).join('');
+}
+
+function calcNDE() {
+  const liab = parseFloat((g('liabilities-val')||{}).value)||0;
+  const totalGEV = assets.reduce((s,a)=>s+a.appraised,0);
+  const totalAdjusted = assets.reduce((s,a)=>{
+    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
+    return s + a.appraised*(1-disc);
+  },0);
+  const nde = Math.max(0, totalAdjusted - liab);
+  return { liab, totalGEV, totalAdjusted, nde };
+}
+
+function calculateAssets() {
+  if(assets.length===0) {
+    alert(lang==='ar'?'يُرجى إضافة أصل واحد على الأقل':lang==='ms'?'Sila tambah sekurang-kurangnya satu aset':'Please add at least one asset.');
+    return;
+  }
+  const { liab, totalGEV, totalAdjusted, nde } = calcNDE();
+  if(nde<=0) { alert(lang==='ar'?'صافي التركة صفر أو سالب بعد الخصومات.':lang==='ms'?'NDE adalah sifar atau negatif selepas potongan.':'Net distributable estate is zero or negative after deductions.'); return; }
+
+  // Get heirs from faraid/civil engine using NDE as estate value
+  const heirResult = track==='syariah' ? calcFaraid(nde) : calcCivil(nde);
+  lastEstate = nde;
+  lastResult = heirResult;
+  renderIlliquidResults(totalGEV, totalAdjusted, liab, nde, heirResult);
+}
+
+function renderIlliquidResults(gev, adjGev, liab, nde, heirResult) {
+  g('empty-state').style.display='none';
+  const wrap = g('results-wrap');
+  wrap.style.display='flex';
+  wrap.innerHTML='';
+
+  const tl = ASSET_TYPE_LABELS[lang]||ASSET_TYPE_LABELS.en;
+  const ml = MODE_LABELS[lang]||MODE_LABELS.en;
+  const ul = URGENCY_LABELS[lang]||URGENCY_LABELS.en;
+
+  // Asset ledger table
+  const assetRows = assets.map(a => {
+    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
+    const adjVal = a.appraised*(1-disc);
+    return \`<tr>
+      <td><strong>\${a.name}</strong><br><span class="asset-type-pill \${a.type}">\${tl[a.type]||a.type}</span></td>
+      <td>\${fmt(a.appraised)}</td>
+      <td><span class="mode-pill \${a.mode}">\${a.mode}: \${ml[a.mode]||''}</span>
+          <br><span style="font-family:'DM Mono',monospace;font-size:0.55rem;color:rgba(13,13,13,0.35);">\${ul[a.urgency]||''}</span></td>
+      <td>\${disc>0?\`<span class="discount-note">−\${(disc*100).toFixed(0)}%</span>\`:''}</td>
+      <td>\${fmt(adjVal)}</td>
+    </tr>\`;
+  }).join('');
+
+  // Visual bar — proportion of each asset
+  const segColors2 = ['2a5c45','b8962e','8b3a2a','3a7a5e','a84a38','1a4c35','d4af5a'];
+  const gevBar = assets.map((a,i) => {
+    const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
+    const adjVal = a.appraised*(1-disc);
+    const flex = adjGev>0 ? Math.round(adjVal/adjGev*1000) : 0;
+    return \`<div class="gev-seg" style="flex:\${flex};background:#\${segColors2[i%segColors2.length]};" title="\${a.name}: \${fmt(adjVal)}">\${flex>100?a.name.slice(0,6):''}</div>\`;
+  }).join('');
+
+  // Heir entitlements per asset
+  const heirEntitlements = heirResult.rows.map(r => {
+    const perAsset = assets.map(a => {
+      const disc = DISCOUNT_MAP[a.mode]?.[a.urgency]||0;
+      const adjVal = a.appraised*(1-disc);
+      const heirShare = adjVal * r.shareVal;
+      return { name:a.name, mode:a.mode, type:a.type, amount:heirShare };
+    });
+    const totalEntitlement = r.totalAmount; // already computed from NDE
+    return { label:r.label, count:r.count, fracStr:r.fracStr, shareVal:r.shareVal,
+             perPerson:r.perPerson, total:totalEntitlement, perAsset };
+  });
+
+  const entitlementRows = heirEntitlements.map(h => {
+    const breakdown = h.perAsset.filter(a=>a.amount>0.01).map(a=>
+      \`\${a.name} (\${a.mode}) → \${fmt(a.amount)}\`
+    ).join(' · ');
+    return \`<div class="entitlement-row \${h.shareVal>0?'active-card':''}">
+      <div style="display:grid;grid-template-columns:1fr auto;align-items:start;gap:0.5rem;">
+        <div>
+          <div class="entitlement-heir">\${h.label}\${h.count>1?' ×'+h.count:''}</div>
+          <div class="entitlement-frac">\${h.fracStr} — \${(h.shareVal*100).toFixed(2)}%</div>
+          <div class="entitlement-breakdown" style="margin-top:0.3rem;">\${breakdown||'—'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="entitlement-total">\${fmt(h.total)}</div>
+          \${h.count>1?\`<div style="font-family:'DM Mono',monospace;font-size:0.58rem;color:rgba(13,13,13,0.35);">\${fmt(h.perPerson)} each</div>\`:''}
+          <div class="entitlement-sbt">SBT</div>
+        </div>
+      </div>
+    </div>\`;
+  }).join('');
+
+  const trackBadge = heirResult.track==='syariah'?t('result.syariah.badge'):t('result.civil.badge');
+  const trackColor = heirResult.track==='syariah'?'jade':'rust';
+
+  wrap.innerHTML = \`
+    <div class="result-header">
+      <div>
+        <span class="result-track-badge \${trackColor}">\${trackBadge}</span>
+        <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(13,13,13,0.35);margin-top:0.5rem;">\${lang==='ar'?'تقييم الأصول':lang==='ms'?'Penilaian Aset':'Asset Ledger Mode'}</div>
+      </div>
+      <div class="result-timestamp">\${new Date().toLocaleDateString('en-MY',{day:'2-digit',month:'short',year:'numeric'})}<br><span style="color:var(--gold);font-size:0.55rem;">\${t('result.indicative')}</span></div>
+    </div>
+
+    <div>
+      <div class="dist-section-title">\${lang==='ar'?'سجل الأصول':lang==='ms'?'Senarai Aset':'Asset Ledger'}</div>
+      <div class="gev-bar">\${gevBar}</div>
+      <table class="asset-ledger">
+        <thead><tr>
+          <th>\${lang==='ar'?'الأصل':lang==='ms'?'Aset':'Asset'}</th>
+          <th>\${lang==='ar'?'القيمة المقدّرة':lang==='ms'?'Nilai Taksiran':'Appraised'}</th>
+          <th>\${lang==='ar'?'وضع الحل':lang==='ms'?'Mod':'Mode'}</th>
+          <th>\${lang==='ar'?'الخصم':lang==='ms'?'Diskaun':'Discount'}</th>
+          <th>\${lang==='ar'?'القيمة المعدّلة':lang==='ms'?'Nilai Terlaras':'Adjusted'}</th>
+        </tr></thead>
+        <tbody>\${assetRows}</tbody>
+      </table>
+    </div>
+
+    <div class="summary-equation">
+      <div class="eq-line"><span class="eq-label">\${lang==='ar'?'إجمالي قيمة التركة (GEV)':lang==='ms'?'Jumlah Nilai Kasar (GEV)':'Gross Estate Value (GEV)'}</span>  <span class="eq-val">\${fmt(gev)}</span></div>
+      <div class="eq-line"><span class="eq-label">\${lang==='ar'?'بعد خصم السيولة':lang==='ms'?'Selepas Diskaun Kecairan':'After Liquidity Discounts'}</span>  <span class="eq-val">\${fmt(adjGev)}</span></div>
+      <div class="eq-line"><span class="eq-label">− \${lang==='ar'?'الديون + مصاريف الجنازة':lang==='ms'?'Hutang + Kos':' Debts + Funeral + Admin'}</span>  <span class="eq-val" style="color:var(--rust);">\${fmt(liab)}</span></div>
+      <div style="border-top:1px solid rgba(184,150,46,0.2);margin:0.5rem 0;"></div>
+      <div class="eq-line"><span class="eq-label">\${lang==='ar'?'صافي التركة القابل للتوزيع (NDE)':lang==='ms'?'Harta Bersih Boleh Agih (NDE)':'Net Distributable Estate (NDE)'}</span></div>
+      <div class="eq-result">\${fmtShort(nde)}</div>
+    </div>
+
+    <div class="entitlement-section">
+      <div class="dist-section-title">\${lang==='ar'?'استحقاقات الورثة':lang==='ms'?'Hak Waris':'Heir Entitlements'}</div>
+      \${entitlementRows}
+    </div>
+
+    \${heirResult.blocked&&heirResult.blocked.length>0?\`<div class="info-box"><p><strong>\${t('blocked.title')}</strong> \${t('blocked.note')} <em>\${heirResult.blocked.join('; ')}</em>.</p><div class="rule-cite">\${t('blocked.rule')}</div></div>\`:''}
+    \${heirResult.warnings.map(w=>\`<div class="info-box warn"><p>\${w}</p></div>\`).join('')}
+
+    <div class="info-box">
+      <p><strong>\${t('disclaimer.title')}</strong> \${t('disclaimer.text')}</p>
+      <div class="rule-cite">\${heirResult.track==='syariah'?t('disclaimer.rule.syariah'):t('disclaimer.rule.civil')}</div>
+    </div>
+  \`;
+}
+
+// ── INIT ──
+setLang('en');
+setTrack('syariah');
+</script>
+</body>
+</html>

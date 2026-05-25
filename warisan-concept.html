@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warisan — Estate Resolution Infrastructure</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d0d;
+    --parchment: #f5f0e8;
+    --gold: #b8962e;
+    --gold-light: #d4af5a;
+    --gold-pale: #f0e4c0;
+    --jade: #2a5c45;
+    --jade-light: #3a7a5e;
+    --rust: #8b3a2a;
+    --mist: #e8e4dc;
+    --line: rgba(184,150,46,0.25);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.6;
+  }
+
+  /* ── HEADER ── */
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 2rem 3rem;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+
+  .header-left {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    line-height: 1.8;
+  }
+
+  .wordmark {
+    text-align: center;
+  }
+
+  .wordmark h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+  }
+
+  .wordmark .arabic {
+    font-size: 0.85rem;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    margin-top: 0.15rem;
+    font-style: italic;
+  }
+
+  .header-right {
+    text-align: right;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: rgba(13,13,13,0.4);
+    letter-spacing: 0.1em;
+    line-height: 1.8;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    padding: 4rem 3rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%;
+    width: 1px;
+    height: 100%;
+    background: var(--line);
+  }
+
+  .hero-left h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    line-height: 1.15;
+    font-weight: 400;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-left h2 em {
+    color: var(--gold);
+    font-style: italic;
+  }
+
+  .hero-left p {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: rgba(13,13,13,0.7);
+    max-width: 420px;
+  }
+
+  .hero-badges {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 1.8rem;
+    flex-wrap: wrap;
+  }
+
+  .badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.7rem;
+    border: 1px solid currentColor;
+  }
+
+  .badge.syariah { color: var(--jade); border-color: var(--jade); }
+  .badge.conventional { color: var(--rust); border-color: var(--rust); }
+  .badge.blockchain { color: var(--gold); border-color: var(--gold); }
+
+  /* State machine diagram */
+  .state-machine {
+    padding: 0 0 0 2rem;
+  }
+
+  .state-machine h3 {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+  }
+
+  .states {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  .state-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    position: relative;
+  }
+
+  .state-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 28px;
+  }
+
+  .state-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: var(--parchment);
+    flex-shrink: 0;
+    margin-top: 4px;
+    transition: all 0.3s;
+  }
+
+  .state-dot.filled { background: var(--gold); }
+  .state-dot.jade { border-color: var(--jade); background: var(--jade); }
+  .state-dot.rust { border-color: var(--rust); background: var(--rust); }
+
+  .state-line {
+    width: 1px;
+    height: 28px;
+    background: var(--line);
+    flex-shrink: 0;
+  }
+
+  .state-content {
+    padding-bottom: 1.2rem;
+  }
+
+  .state-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .state-desc {
+    font-size: 0.75rem;
+    color: rgba(13,13,13,0.5);
+    margin-top: 0.2rem;
+    line-height: 1.5;
+  }
+
+  /* ── SECTIONS ── */
+  section {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 1.5rem 3rem 0;
+  }
+
+  /* ── ARCHITECTURE ── */
+  .architecture {
+    padding: 2rem 3rem 3rem;
+  }
+
+  .arch-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    margin-bottom: 2rem;
+  }
+
+  .arch-layers {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+  }
+
+  .arch-layer {
+    background: var(--parchment);
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.2s;
+  }
+
+  .arch-layer:hover {
+    background: var(--gold-pale);
+  }
+
+  .arch-layer::before {
+    content: attr(data-num);
+    position: absolute;
+    bottom: -0.5rem;
+    right: 0.5rem;
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    color: var(--line);
+    font-style: italic;
+    line-height: 1;
+  }
+
+  .layer-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.5rem;
+  }
+
+  .layer-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    margin-bottom: 0.6rem;
+    font-weight: 700;
+  }
+
+  .layer-desc {
+    font-size: 0.75rem;
+    line-height: 1.7;
+    color: rgba(13,13,13,0.65);
+  }
+
+  .layer-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--jade);
+    color: var(--jade);
+    margin-top: 0.8rem;
+  }
+
+  /* ── DUAL TRACK ── */
+  .dual-track {
+    padding: 2rem 3rem 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .track-card {
+    border: 1px solid var(--line);
+    padding: 2rem;
+    position: relative;
+  }
+
+  .track-card.syariah { border-top: 3px solid var(--jade); }
+  .track-card.civil { border-top: 3px solid var(--rust); }
+
+  .track-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+  }
+
+  .track-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+  }
+
+  .track-subtitle {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(13,13,13,0.4);
+    letter-spacing: 0.1em;
+    margin-top: 0.2rem;
+  }
+
+  .track-icon {
+    font-size: 1.5rem;
+    opacity: 0.4;
+  }
+
+  .track-items {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .track-items li {
+    font-size: 0.8rem;
+    line-height: 1.5;
+    padding-left: 1rem;
+    position: relative;
+    color: rgba(13,13,13,0.75);
+  }
+
+  .track-items li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--gold);
+  }
+
+  /* ── SMART CONTRACT ── */
+  .contract-section {
+    padding: 2rem 3rem 3rem;
+  }
+
+  .contract-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+  }
+
+  .contract-block {
+    background: var(--ink);
+    color: #e8e4dc;
+    padding: 1.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    line-height: 1.8;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .contract-block::before {
+    content: attr(data-label);
+    position: absolute;
+    top: 0.6rem;
+    right: 0.8rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    opacity: 0.7;
+  }
+
+  .code-comment { color: #6b7280; }
+  .code-keyword { color: var(--gold-light); }
+  .code-type { color: #93c5fd; }
+  .code-string { color: #86efac; }
+  .code-event { color: #f9a8d4; }
+
+  /* ── PROOF CHAIN ── */
+  .proof-section {
+    padding: 2rem 3rem 3rem;
+  }
+
+  .proof-chain {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 1.5rem;
+    overflow-x: auto;
+  }
+
+  .proof-node {
+    flex: 1;
+    min-width: 140px;
+    border: 1px solid var(--line);
+    padding: 1.2rem;
+    position: relative;
+    background: var(--parchment);
+  }
+
+  .proof-node:not(:last-child)::after {
+    content: '→';
+    position: absolute;
+    right: -0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold);
+    font-size: 0.9rem;
+    z-index: 2;
+    background: var(--parchment);
+    padding: 0 0.2rem;
+  }
+
+  .proof-step {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+
+  .proof-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+    font-family: 'Playfair Display', serif;
+  }
+
+  .proof-detail {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(13,13,13,0.5);
+    line-height: 1.5;
+  }
+
+  /* ── FINANCIAL ACCESS ── */
+  .financial-section {
+    padding: 2rem 3rem 3rem;
+  }
+
+  .financial-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    margin-top: 1.5rem;
+  }
+
+  .fin-card {
+    background: var(--parchment);
+    padding: 1.5rem 1.2rem;
+    transition: background 0.2s;
+  }
+
+  .fin-card:hover { background: var(--gold-pale); }
+
+  .fin-before {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(13,13,13,0.35);
+    text-decoration: line-through;
+    margin-bottom: 0.3rem;
+  }
+
+  .fin-after {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--jade);
+    margin-bottom: 0.3rem;
+  }
+
+  .fin-label {
+    font-size: 0.72rem;
+    color: rgba(13,13,13,0.6);
+    line-height: 1.4;
+  }
+
+  /* ── PARTNER MAP ── */
+  .partner-section {
+    padding: 2rem 3rem 3rem;
+  }
+
+  .partner-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    align-items: start;
+  }
+
+  .ar-anchor {
+    width: 180px;
+    border: 2px solid var(--gold);
+    padding: 1.5rem;
+    text-align: center;
+    position: relative;
+  }
+
+  .ar-anchor::before {
+    content: 'Institutional Anchor';
+    position: absolute;
+    top: -0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--parchment);
+    padding: 0 0.5rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    color: var(--gold);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .ar-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  .ar-role {
+    font-size: 0.7rem;
+    color: rgba(13,13,13,0.5);
+    line-height: 1.5;
+  }
+
+  .partners-web {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+  }
+
+  .partner-pill {
+    border: 1px solid var(--line);
+    padding: 0.8rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    transition: border-color 0.2s;
+  }
+
+  .partner-pill:hover { border-color: var(--gold); }
+
+  .partner-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+  }
+
+  .partner-use {
+    font-size: 0.7rem;
+    color: rgba(13,13,13,0.5);
+  }
+
+  /* ── REVENUE ── */
+  .revenue-section {
+    padding: 2rem 3rem 3rem;
+    background: var(--ink);
+    color: var(--parchment);
+  }
+
+  .revenue-section .section-label { color: var(--gold); padding-left: 0; }
+  .revenue-section .arch-title { color: var(--parchment); }
+
+  .rev-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.08);
+    margin-top: 1.5rem;
+  }
+
+  .rev-card {
+    padding: 1.5rem;
+    background: var(--ink);
+    transition: background 0.2s;
+  }
+
+  .rev-card:hover { background: #1a1a1a; }
+
+  .rev-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-style: italic;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+  }
+
+  .rev-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(232,228,220,0.6);
+    margin-bottom: 0.4rem;
+  }
+
+  .rev-desc {
+    font-size: 0.75rem;
+    color: rgba(232,228,220,0.45);
+    line-height: 1.6;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    padding: 2rem 3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--line);
+  }
+
+  .footer-mark {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--gold);
+  }
+
+  .footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: rgba(13,13,13,0.35);
+    letter-spacing: 0.1em;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero-left, .hero-right, .arch-layer, .track-card {
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .arch-layer:nth-child(1) { animation-delay: 0.05s; }
+  .arch-layer:nth-child(2) { animation-delay: 0.1s; }
+  .arch-layer:nth-child(3) { animation-delay: 0.15s; }
+  .arch-layer:nth-child(4) { animation-delay: 0.2s; }
+  .arch-layer:nth-child(5) { animation-delay: 0.25s; }
+  .arch-layer:nth-child(6) { animation-delay: 0.3s; }
+
+  /* Decorative line ornament */
+  .ornament {
+    text-align: center;
+    color: var(--gold);
+    font-size: 1rem;
+    letter-spacing: 0.5em;
+    padding: 1rem 0;
+    opacity: 0.4;
+  }
+
+  /* ── CALCULATOR BUTTON ── */
+  .calc-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.22s ease;
+    white-space: nowrap;
+    margin-top: 0.3rem;
+  }
+  .calc-cta-btn:hover {
+    background: var(--gold);
+    color: var(--parchment);
+  }
+  .calc-cta-btn .btn-arrow {
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+  }
+  .calc-cta-btn:hover .btn-arrow {
+    transform: translateX(3px);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    WARISAN PROTOCOL<br>
+    ESTATE RESOLUTION INFRASTRUCTURE<br>
+    v0.1 CONCEPT BRIEF
+  </div>
+  <div class="wordmark">
+    <h1>WARISAN</h1>
+    <div class="arabic">وارثان — Legacy on Chain</div>
+  </div>
+  <div class="header-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;">
+    <div>SYARIAH + CONVENTIONAL<br>DUAL-TRACK COMPLIANT<br>AMANAH RAYA INTEGRATED</div>
+    <a class="calc-cta-btn" href="warisan-calculator.html" target="_blank">
+      Try the Calculator <span class="btn-arrow">→</span>
+    </a>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-left">
+    <h2>Resolve what was left<br><em>without instruction.</em></h2>
+    <p>A blockchain-anchored estate resolution system for intestate assets in Malaysia — serving both Syariah (Faraid) and civil intestate law tracks, with settlement issuance as a verifiable financial instrument.</p>
+    <div class="hero-badges">
+      <span class="badge syariah">Syariah / Faraid</span>
+      <span class="badge conventional">Civil / Intestate</span>
+      <span class="badge blockchain">On-Chain Settlement</span>
+    </div>
+  </div>
+  <div class="state-machine">
+    <h3>Contract State Machine</h3>
+    <div class="states">
+      <div class="state-item">
+        <div class="state-connector">
+          <div class="state-dot filled"></div>
+          <div class="state-line"></div>
+        </div>
+        <div class="state-content">
+          <div class="state-name">PENDING_VERIFICATION</div>
+          <div class="state-desc">Estate filed. Awaiting identity + death cert confirmation</div>
+        </div>
+      </div>
+      <div class="state-item">
+        <div class="state-connector">
+          <div class="state-dot filled"></div>
+          <div class="state-line"></div>
+        </div>
+        <div class="state-content">
+          <div class="state-name">IDENTITY_VERIFIED</div>
+          <div class="state-desc">All heirs confirmed via MyKad + biometric</div>
+        </div>
+      </div>
+      <div class="state-item">
+        <div class="state-connector">
+          <div class="state-dot filled"></div>
+          <div class="state-line"></div>
+        </div>
+        <div class="state-content">
+          <div class="state-name">ASSET_MAPPED</div>
+          <div class="state-desc">Properties, accounts, shares linked to estate ID</div>
+        </div>
+      </div>
+      <div class="state-item">
+        <div class="state-connector">
+          <div class="state-dot"></div>
+          <div class="state-line"></div>
+        </div>
+        <div class="state-content">
+          <div class="state-name">ARBITRATION ← DISPUTE_OPEN</div>
+          <div class="state-desc">Contested claims routed to Syariah court or civil adjudicator</div>
+        </div>
+      </div>
+      <div class="state-item">
+        <div class="state-connector">
+          <div class="state-dot jade"></div>
+          <div class="state-line"></div>
+        </div>
+        <div class="state-content">
+          <div class="state-name">SETTLEMENT_ISSUED</div>
+          <div class="state-desc">SBT token minted. Anchored to Ethereum. IPFS proof stored</div>
+        </div>
+      </div>
+      <div class="state-item">
+        <div class="state-connector">
+          <div class="state-dot rust"></div>
+        </div>
+        <div class="state-content">
+          <div class="state-name">DISTRIBUTED / CLOSED</div>
+          <div class="state-desc">Assets transferred. AR case resolved. Financial access unlocked</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div class="section-label">System Architecture</div>
+<div class="architecture">
+  <h2 class="arch-title">Six-Layer Infrastructure Stack</h2>
+  <div class="arch-layers">
+    <div class="arch-layer" data-num="1">
+      <div class="layer-name">Layer 1</div>
+      <div class="layer-title">Identity</div>
+      <div class="layer-desc">MyKad NFC + biometric liveness check. JPN death registry API integration. All identity hashes are off-chain, on-chain proof-of-inclusion only.</div>
+      <span class="layer-tag">MyKad · JPN · Liveness</span>
+    </div>
+    <div class="arch-layer" data-num="2">
+      <div class="layer-name">Layer 2</div>
+      <div class="layer-title">Asset Registry</div>
+      <div class="layer-desc">Connect to Land Office, EPF, Bursa, LHDN, bank APIs. Each asset gets a verified UUID mapped to deceased IC. Amanah Raya holdings surfaced via AR Query API.</div>
+      <span class="layer-tag">Land · EPF · Bursa · AR</span>
+    </div>
+    <div class="arch-layer" data-num="3">
+      <div class="layer-name">Layer 3</div>
+      <div class="layer-title">Dispute Resolution</div>
+      <div class="layer-desc">Dual-track engine: Faraid calculator (Syariah) + Distribution Act 1958 (Civil). Contested cases escalate to registered arbitrators via smart contract trigger.</div>
+      <span class="layer-tag">Faraid · Dist. Act 1958</span>
+    </div>
+    <div class="arch-layer" data-num="4">
+      <div class="layer-name">Layer 4</div>
+      <div class="layer-title">Settlement Layer</div>
+      <div class="layer-desc">Soulbound Token (SBT) issued per heir. Non-transferable, non-fractionable. Represents verified ownership share. Anchored to Ethereum mainnet via Merkle proof.</div>
+      <span class="layer-tag">SBT · IPFS · OpenTimestamps</span>
+    </div>
+    <div class="arch-layer" data-num="5">
+      <div class="layer-name">Layer 5</div>
+      <div class="layer-title">Financial Access</div>
+      <div class="layer-desc">SBT verified by partner FIs. Unlocks improved LTV, lower DSR calculation, Waqf-linked investments, elevated ASB limits. Heir's verified asset now works for them.</div>
+      <span class="layer-tag">Banks · ASNB · Takaful</span>
+    </div>
+    <div class="arch-layer" data-num="6">
+      <div class="layer-name">Layer 6</div>
+      <div class="layer-title">Institutional API</div>
+      <div class="layer-desc">External partners (banks, EPF, insurers) push unresolved estate cases via Warisan Verification API. System resolves and returns settlement hash. Scales nationally.</div>
+      <span class="layer-tag">REST API · Webhook · SDK</span>
+    </div>
+  </div>
+</div>
+
+<!-- DUAL TRACK -->
+<div class="section-label">Compliance Framework</div>
+<div class="dual-track">
+  <div class="track-card syariah">
+    <div class="track-header">
+      <div>
+        <div class="track-title">Syariah Track</div>
+        <div class="track-subtitle">Faraid Distribution Engine</div>
+      </div>
+      <div class="track-icon">☽</div>
+    </div>
+    <ul class="track-items">
+      <li>Faraid calculator — auto-distributes per heir relationship matrix</li>
+      <li>Supports Ta'sib (agnatic) and Dhawul Arham principles</li>
+      <li>Hajb (blocking) rules enforced programmatically</li>
+      <li>Jabatan Agama Islam integration for validation</li>
+      <li>Outputs Sijil Pembahagian Harta equivalent as on-chain record</li>
+      <li>Waqf assets flagged and handled separately with MAIN/SIRC</li>
+      <li>Mixed-religion estates escalate to human adjudicator flag</li>
+    </ul>
+  </div>
+  <div class="track-card civil">
+    <div class="track-header">
+      <div>
+        <div class="track-title">Conventional Track</div>
+        <div class="track-subtitle">Civil Intestate Law</div>
+      </div>
+      <div class="track-icon">⚖</div>
+    </div>
+    <ul class="track-items">
+      <li>Distribution Act 1958 — intestate succession table built-in</li>
+      <li>Probate-equivalent workflow via e-Filing to High Court</li>
+      <li>Supports adopted children, stepchildren, illegitimate children (per Evidence Act)</li>
+      <li>Mixed marriages, non-Muslim estates, stateless persons handled</li>
+      <li>Letters of Administration equivalent generated on-chain</li>
+      <li>LHDN clearance certificate triggered before distribution</li>
+      <li>Solicitor e-signature integration for court submission</li>
+    </ul>
+  </div>
+</div>
+
+<!-- PROOF CHAIN -->
+<div class="section-label">Timeless Proof Architecture</div>
+<div class="proof-section">
+  <h2 class="arch-title">Every Settlement is Provable, Forever</h2>
+  <div class="proof-chain">
+    <div class="proof-node">
+      <div class="proof-step">Step 1</div>
+      <div class="proof-label">Document Hash</div>
+      <div class="proof-detail">SHA-256 of all estate docs. Stored on consortium chain. Never deletable.</div>
+    </div>
+    <div class="proof-node">
+      <div class="proof-step">Step 2</div>
+      <div class="proof-label">IPFS Bundle</div>
+      <div class="proof-detail">Full estate file (PDFs, identity proofs, asset certs) pinned to IPFS. CID on-chain.</div>
+    </div>
+    <div class="proof-node">
+      <div class="proof-step">Step 3</div>
+      <div class="proof-label">Block Anchor</div>
+      <div class="proof-detail">Consortium block Merkle root anchored to Ethereum via OpenTimestamps.</div>
+    </div>
+    <div class="proof-node">
+      <div class="proof-step">Step 4</div>
+      <div class="proof-label">JPN Attestation</div>
+      <div class="proof-detail">JPN digital signature wraps estate record. Legally binding national identity layer.</div>
+    </div>
+    <div class="proof-node">
+      <div class="proof-step">Step 5</div>
+      <div class="proof-label">Re-Attestation</div>
+      <div class="proof-detail">Smart contract pings annually. SBT re-validated. Heirs confirm continuity.</div>
+    </div>
+  </div>
+</div>
+
+<!-- SMART CONTRACT -->
+<div class="section-label">Smart Contract Design</div>
+<div class="contract-section">
+  <h2 class="arch-title">On-Chain Settlement Logic</h2>
+  <div class="contract-grid">
+    <div class="contract-block" data-label="Estate Struct">
+      <span class="code-comment">// Core estate data structure</span><br>
+      <span class="code-keyword">struct</span> <span class="code-type">Estate</span> {<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> estateId;<br>
+      &nbsp;&nbsp;<span class="code-comment">// hash(IC + deathCert + assetIDs)</span><br>
+      &nbsp;&nbsp;<span class="code-type">address[]</span> heirs;<br>
+      &nbsp;&nbsp;<span class="code-type">AssetBundle[]</span> assets;<br>
+      &nbsp;&nbsp;<span class="code-type">Track</span> track;<br>
+      &nbsp;&nbsp;<span class="code-comment">// SYARIAH | CONVENTIONAL</span><br>
+      &nbsp;&nbsp;<span class="code-type">State</span> state;<br>
+      &nbsp;&nbsp;<span class="code-type">uint256</span> filedAt;<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> ipfsProofHash;<br>
+      }
+    </div>
+    <div class="contract-block" data-label="Settlement SBT">
+      <span class="code-comment">// Soulbound settlement token</span><br>
+      <span class="code-keyword">struct</span> <span class="code-type">SettlementSBT</span> {<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> estateId;<br>
+      &nbsp;&nbsp;<span class="code-type">address</span> heir;<br>
+      &nbsp;&nbsp;<span class="code-type">uint256</span> shareBPS;<br>
+      &nbsp;&nbsp;<span class="code-comment">// basis points, e.g. 2500 = 25%</span><br>
+      &nbsp;&nbsp;<span class="code-type">bool</span> transferable = <span class="code-string">false</span>;<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> issuerSig;<br>
+      &nbsp;&nbsp;<span class="code-type">uint256</span> issuedAt;<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> ethereumAnchor;<br>
+      }
+    </div>
+    <div class="contract-block" data-label="Events (Immutable Log)">
+      <span class="code-comment">// Every state change is permanent</span><br>
+      <span class="code-keyword">event</span> <span class="code-event">StateChanged</span>(<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> indexed estateId,<br>
+      &nbsp;&nbsp;<span class="code-type">State</span> from, to,<br>
+      &nbsp;&nbsp;<span class="code-type">uint256</span> timestamp<br>
+      );<br><br>
+      <span class="code-keyword">event</span> <span class="code-event">SettlementIssued</span>(<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> indexed estateId,<br>
+      &nbsp;&nbsp;<span class="code-type">address</span> indexed issuer<br>
+      );<br><br>
+      <span class="code-keyword">event</span> <span class="code-event">HeirVerified</span>(<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> estateId,<br>
+      &nbsp;&nbsp;<span class="code-type">bytes32</span> credentialHash<br>
+      );
+    </div>
+    <div class="contract-block" data-label="Guard Logic">
+      <span class="code-comment">// Cannot skip states</span><br>
+      <span class="code-keyword">modifier</span> <span class="code-type">onlyState</span>(State s) {<br>
+      &nbsp;&nbsp;require(estate.state == s);<br>
+      &nbsp;&nbsp;_;<br>
+      }<br><br>
+      <span class="code-comment">// Faraid auto-calculation</span><br>
+      <span class="code-keyword">function</span> <span class="code-type">calcFaraid</span>(<br>
+      &nbsp;&nbsp;<span class="code-type">HeirMatrix</span> memory heirs<br>
+      ) returns (<span class="code-type">uint256[]</span>) {<br>
+      &nbsp;&nbsp;<span class="code-comment">// Quran 4:11-12 table</span><br>
+      &nbsp;&nbsp;return _applyFaraidRules(heirs);<br>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- FINANCIAL ACCESS -->
+<div class="section-label">Financial Access Layer</div>
+<div class="financial-section">
+  <h2 class="arch-title">Verified Asset = Better Financial Terms</h2>
+  <div class="financial-grid">
+    <div class="fin-card">
+      <div class="fin-before">Unverified / Frozen</div>
+      <div class="fin-after">LTV up to 85%</div>
+      <div class="fin-label">Property-backed financing at improved loan-to-value</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-before">No collateral proof</div>
+      <div class="fin-after">DSR −5–8%</div>
+      <div class="fin-label">Reduced debt service ratio calculation for heir's existing loans</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-before">Standard limit</div>
+      <div class="fin-after">ASB/ASN+</div>
+      <div class="fin-label">Elevated investment ceilings via ASNB partner channel</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-before">No Syariah route</div>
+      <div class="fin-after">Waqf Access</div>
+      <div class="fin-label">Syariah-track heirs access Waqf-linked savings and investment accounts</div>
+    </div>
+  </div>
+</div>
+
+<!-- PARTNER MAP -->
+<div class="section-label">Institutional Partners</div>
+<div class="partner-section">
+  <h2 class="arch-title">Amanah Raya as Anchor — Ecosystem Expands</h2>
+  <div class="partner-grid">
+    <div class="ar-anchor">
+      <div class="ar-name">Amanah Raya Bhd</div>
+      <div class="ar-role">Custodian node operator. AR Query API. Case closure trigger. SBT issuer for resolved unclaimed estates.</div>
+    </div>
+    <div class="partners-web">
+      <div class="partner-pill">
+        <div class="partner-name">EPF / KWSP</div>
+        <div class="partner-use">Nominee disputes, unclaimed balances</div>
+      </div>
+      <div class="partner-pill">
+        <div class="partner-name">Bursa Malaysia</div>
+        <div class="partner-use">Unclaimed dividends, share certificates</div>
+      </div>
+      <div class="partner-pill">
+        <div class="partner-name">Pejabat Tanah</div>
+        <div class="partner-use">Strata titles, kampung land disputes</div>
+      </div>
+      <div class="partner-pill">
+        <div class="partner-name">LHDN</div>
+        <div class="partner-use">Estate tax clearance before distribution</div>
+      </div>
+      <div class="partner-pill">
+        <div class="partner-name">Maybank / CIMB / BSN</div>
+        <div class="partner-use">Frozen accounts of deceased</div>
+      </div>
+      <div class="partner-pill">
+        <div class="partner-name">Takaful / Insurers</div>
+        <div class="partner-use">Matured policies, disputed beneficiaries</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ILLIQUID ASSETS SECTION -->
+<div class="section-label">Non-Liquid Asset Resolution</div>
+<div class="architecture">
+  <h2 class="arch-title">The Illiquid Asset Equation</h2>
+  <div class="arch-layers">
+    <div class="arch-layer" data-num="1">
+      <div class="layer-name">Step 1</div>
+      <div class="layer-title">Valuation (تقييم)</div>
+      <div class="layer-desc">Every non-liquid asset is independently appraised. Licensed valuers (JPPH) for property; auditors for private company shares; certified appraisers for jewellery and collectibles. Output: Gross Estate Value (GEV).</div>
+      <span class="layer-tag">JPPH · Auditor · Appraiser</span>
+    </div>
+    <div class="arch-layer" data-num="2">
+      <div class="layer-name">Step 2</div>
+      <div class="layer-title">Netting (صافي)</div>
+      <div class="layer-desc">Net Distributable Estate = GEV − Debts − Funeral Expenses − Admin Costs. Illiquid appraised values feed directly into the NDE before Faraid fractions are applied.</div>
+      <span class="layer-tag">NDE = GEV − Liabilities</span>
+    </div>
+    <div class="arch-layer" data-num="3">
+      <div class="layer-name">Mode A</div>
+      <div class="layer-title">Collective Sale (بيع جماعي)</div>
+      <div class="layer-desc">All heirs agree to sell. Proceeds split by Faraid fractions. Court-enforced if needed. Liquidity discount applied based on urgency of sale (0–40%).</div>
+      <span class="layer-tag">Full Market · Court Sale · Distress</span>
+    </div>
+    <div class="arch-layer" data-num="4">
+      <div class="layer-name">Mode B</div>
+      <div class="layer-title">Buyout (افتداء)</div>
+      <div class="layer-desc">One heir keeps the asset and compensates the rest. Buyout Price per Heir = Asset Value × Heir's Faraid Share. Can be structured as cash, instalments, or a charge over the asset.</div>
+      <span class="layer-tag">Cash · Instalment · Charge</span>
+    </div>
+    <div class="arch-layer" data-num="5">
+      <div class="layer-name">Mode C</div>
+      <div class="layer-title">Co-Ownership (مشاع)</div>
+      <div class="layer-desc">Temporary undivided fractional title (Musya'). Income distributed per Faraid fraction. Sunset clause triggers compulsory sale if unresolved after 3 years. Recognised under NLC s.342.</div>
+      <span class="layer-tag">Musya' · NLC s.342 · Sunset</span>
+    </div>
+    <div class="arch-layer" data-num="6">
+      <div class="layer-name">SBT Layer</div>
+      <div class="layer-title">Tokenised Interest (رمز)</div>
+      <div class="layer-desc">Each heir's fractional claim — including illiquid assets in Mode C — is carried in their Settlement SBT. Partner FIs accept this as proof of beneficial interest for collateralised financing at 40–60% LTV.</div>
+      <span class="layer-tag">SBT · Collateral · 40–60% LTV</span>
+    </div>
+  </div>
+</div>
+
+<!-- REVENUE -->
+<div class="section-label" style="padding: 1.5rem 3rem 0; color: var(--gold);">Revenue Model</div>
+<div class="revenue-section">
+  <h2 class="arch-title" style="color: var(--parchment);">Sustainable Without Extracting From Heirs</h2>
+  <div class="rev-grid">
+    <div class="rev-card">
+      <div class="rev-pct">0.5–1%</div>
+      <div class="rev-name">Settlement Fee</div>
+      <div class="rev-desc">Charged on estate value at settlement issuance. Capped at RM 5,000. Paid by estate, not individual heirs. Parallel to current AR fee structure.</div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-pct">API</div>
+      <div class="rev-name">Institutional API</div>
+      <div class="rev-desc">SaaS fees for FI integrations (banks, EPF, insurers). Per-query or per-resolved-case pricing. B2B revenue with no friction on end user.</div>
+    </div>
+    <div class="rev-card">
+      <div class="rev-pct">FI Cut</div>
+      <div class="rev-name">Referral / Access</div>
+      <div class="rev-desc">Revenue share when verified SBT holder accesses improved loan/investment products through Warisan partner FIs. Opt-in, user-controlled.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-mark">Warisan — Timeless Proof of Legacy</div>
+  <div class="footer-note">
+    CONCEPT BRIEF · SYARIAH + CONVENTIONAL DUAL TRACK<br>
+    TARGET PARTNER: AMANAH RAYA BHD · MALAYSIA
+  </div>
+</footer>
+
+</body>
+</html>

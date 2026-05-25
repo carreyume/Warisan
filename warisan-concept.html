@@ -753,9 +753,14 @@
   </div>
   <div class="header-right" style="display:flex;flex-direction:column;align-items:flex-end;gap:0.5rem;">
     <div>SYARIAH + CONVENTIONAL<br>DUAL-TRACK COMPLIANT<br>AMANAH RAYA INTEGRATED</div>
-    <a class="calc-cta-btn" href="warisan-calculator.html" target="_blank">
-      Try the Calculator <span class="btn-arrow">→</span>
-    </a>
+    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:flex-end;">
+      <a class="calc-cta-btn" href="warisan-api.html" target="_blank" style="border-color:var(--jade);color:var(--jade);">
+        API Docs <span class="btn-arrow" style="color:var(--jade);">→</span>
+      </a>
+      <a class="calc-cta-btn" href="warisan-calculator.html" target="_blank">
+        Try the Calculator <span class="btn-arrow">→</span>
+      </a>
+    </div>
   </div>
 </header>
 
@@ -875,7 +880,8 @@
       <div class="layer-name">Layer 6</div>
       <div class="layer-title">Institutional API</div>
       <div class="layer-desc">External partners (banks, EPF, insurers) push unresolved estate cases via Warisan Verification API. System resolves and returns settlement hash. Scales nationally.</div>
-      <span class="layer-tag">REST API · Webhook · SDK</span>
+      <a href="warisan-api.html" target="_blank" style="display:inline-block;margin-top:0.5rem;font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--jade);text-decoration:none;border-bottom:1px solid var(--jade);padding-bottom:1px;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.6'" onmouseout="this.style.opacity='1'">View API Reference →</a>
+      <span class="layer-tag" style="display:block;margin-top:0.4rem;">REST API · Webhook · SDK</span>
     </div>
   </div>
 </div>
@@ -1156,9 +1162,13 @@
 <!-- FOOTER -->
 <footer>
   <div class="footer-mark">Warisan — Timeless Proof of Legacy</div>
-  <div class="footer-note">
-    CONCEPT BRIEF · SYARIAH + CONVENTIONAL DUAL TRACK<br>
-    TARGET PARTNER: AMANAH RAYA BHD · MALAYSIA
+  <div class="footer-note" style="display:flex;flex-direction:column;align-items:flex-end;gap:0.4rem;">
+    <div style="display:flex;gap:1.2rem;">
+      <a href="warisan-calculator.html" target="_blank" style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">Calculator</a>
+      <a href="warisan-api.html" target="_blank" style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--jade);text-decoration:none;opacity:0.6;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">API Reference</a>
+    </div>
+    <div>CONCEPT BRIEF · SYARIAH + CONVENTIONAL DUAL TRACK<br>
+    TARGET PARTNER: AMANAH RAYA BHD · MALAYSIA</div>
   </div>
 </footer>
 

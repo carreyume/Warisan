@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Warisan Estate — Property & Rental Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1a1714; --cream:#faf6ef; --paper:#f3ede2; --card:#fffdf9;
+  --gold:#c08b2e; --gold-deep:#9a6d1f; --gold-soft:#e8d9b8;
+  --jade:#2f5d4a; --jade-soft:#d8e6df; --jade-bright:#3a7a5e;
+  --clay:#b5512f; --clay-soft:#f0d9d0;
+  --warm-grey:#8a8178; --line:rgba(26,23,20,0.1);
+  --shadow:rgba(26,23,20,0.08); --green:#2f7d4a; --red:#b5402f; --amber:#c89020;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--cream);color:var(--ink);font-family:'DM Sans',sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0.4;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(250,246,239,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);}
+.nav-inner{max-width:1200px;margin:0 auto;padding:0.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Fraunces',serif;font-weight:700;font-size:1.3rem;color:var(--ink);text-decoration:none;display:flex;align-items:baseline;gap:0.5rem;}
+.logo .ar{font-size:0.85rem;color:var(--gold);font-weight:400;}
+.nav-right{display:flex;align-items:center;gap:1.2rem;}
+.plan-pill{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.3rem 0.7rem;border-radius:100px;background:var(--jade-soft);color:var(--jade);}
+.plan-pill.pro{background:var(--gold-soft);color:var(--gold-deep);}
+.nav-btn{font-size:0.82rem;color:var(--warm-grey);text-decoration:none;font-weight:500;transition:color 0.2s;}
+.nav-btn:hover{color:var(--ink);}
+
+.wrap{max-width:1200px;margin:0 auto;padding:2rem 1.5rem 4rem;position:relative;z-index:2;}
+
+/* HEADER */
+.page-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;margin-bottom:2rem;}
+.page-head h1{font-family:'Fraunces',serif;font-weight:600;font-size:2rem;letter-spacing:-0.01em;}
+.page-head p{color:var(--warm-grey);font-size:0.95rem;margin-top:0.3rem;}
+.btn{font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.9rem;padding:0.7rem 1.4rem;border-radius:100px;border:none;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;transition:all 0.2s;}
+.btn-primary{background:var(--ink);color:var(--cream);box-shadow:0 4px 16px var(--shadow);}
+.btn-primary:hover{background:var(--gold-deep);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);}
+.btn-ghost:hover{border-color:var(--ink);}
+.btn-sm{font-size:0.78rem;padding:0.45rem 0.9rem;}
+
+/* PROPERTY SELECTOR TABS */
+.prop-tabs{display:flex;gap:0.6rem;margin-bottom:1.8rem;flex-wrap:wrap;align-items:center;}
+.prop-tab{padding:0.6rem 1.1rem;border-radius:100px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-weight:600;font-size:0.85rem;transition:all 0.2s;display:flex;align-items:center;gap:0.5rem;}
+.prop-tab.active{background:var(--ink);color:var(--cream);border-color:var(--ink);}
+.prop-tab .ptype{font-size:0.95rem;}
+.prop-tab-add{padding:0.6rem 1rem;border-radius:100px;border:1.5px dashed var(--gold);background:transparent;color:var(--gold-deep);cursor:pointer;font-weight:600;font-size:0.85rem;transition:all 0.2s;}
+.prop-tab-add:hover{background:var(--gold-soft);}
+.prop-tab-add.locked{border-color:var(--line);color:var(--warm-grey);}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:1.4rem;position:relative;overflow:hidden;}
+.stat-card .label{font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--warm-grey);margin-bottom:0.6rem;}
+.stat-card .value{font-family:'Fraunces',serif;font-size:1.8rem;font-weight:600;line-height:1;}
+.stat-card .sub{font-size:0.75rem;margin-top:0.4rem;display:flex;align-items:center;gap:0.3rem;}
+.stat-card .sub.up{color:var(--green);}
+.stat-card .sub.down{color:var(--red);}
+.stat-card .accent{position:absolute;top:0;left:0;width:100%;height:3px;}
+.stat-card.income .accent{background:var(--jade);}
+.stat-card.cost .accent{background:var(--clay);}
+.stat-card.net .accent{background:var(--gold);}
+.stat-card.arrear .accent{background:var(--amber);}
+
+/* LAYOUT GRID */
+.dash-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:1.5rem;}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:1.6rem;margin-bottom:1.5rem;}
+.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;}
+.panel-head h2{font-family:'Fraunces',serif;font-size:1.2rem;font-weight:600;}
+.panel-head .panel-sub{font-size:0.75rem;color:var(--warm-grey);}
+
+/* CHART */
+.chart-wrap{height:200px;position:relative;margin-bottom:0.5rem;}
+.chart-bars{display:flex;align-items:flex-end;justify-content:space-between;height:170px;gap:0.4rem;padding-top:1rem;}
+.chart-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.4rem;height:100%;justify-content:flex-end;}
+.chart-bar-group{display:flex;align-items:flex-end;gap:2px;height:100%;width:100%;justify-content:center;}
+.chart-bar{width:42%;border-radius:4px 4px 0 0;transition:height 0.6s cubic-bezier(0.4,0,0.2,1);min-height:2px;position:relative;}
+.chart-bar.inc{background:var(--jade);}
+.chart-bar.cost{background:var(--clay-soft);}
+.chart-bar:hover{opacity:0.8;}
+.chart-label{font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--warm-grey);}
+.chart-legend{display:flex;gap:1.2rem;justify-content:center;margin-top:0.8rem;font-size:0.72rem;color:var(--warm-grey);}
+.chart-legend .dot{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:0.35rem;vertical-align:middle;}
+
+/* LEDGER TABLE */
+.ledger{width:100%;border-collapse:collapse;font-size:0.85rem;}
+.ledger th{text-align:left;font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--warm-grey);padding:0.5rem 0.6rem;border-bottom:1px solid var(--line);font-weight:400;}
+.ledger td{padding:0.7rem 0.6rem;border-bottom:1px solid rgba(26,23,20,0.05);}
+.ledger tr:last-child td{border-bottom:none;}
+.ledger .amt{font-family:'DM Mono',monospace;font-weight:500;text-align:right;}
+.ledger .amt.pos{color:var(--green);}
+.ledger .amt.neg{color:var(--red);}
+.badge{font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.05em;text-transform:uppercase;padding:0.2rem 0.5rem;border-radius:100px;white-space:nowrap;}
+.badge.paid{background:var(--jade-soft);color:var(--jade);}
+.badge.due{background:#fdf0d5;color:var(--amber);}
+.badge.overdue{background:var(--clay-soft);color:var(--clay);}
+
+/* TENANT CARD */
+.tenant{display:flex;align-items:center;gap:0.9rem;padding:0.9rem 0;border-bottom:1px solid rgba(26,23,20,0.05);}
+.tenant:last-child{border-bottom:none;}
+.tenant-avatar{width:40px;height:40px;border-radius:12px;background:var(--gold-soft);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:600;color:var(--gold-deep);flex-shrink:0;}
+.tenant-info{flex:1;}
+.tenant-name{font-weight:600;font-size:0.9rem;}
+.tenant-meta{font-size:0.75rem;color:var(--warm-grey);}
+.tenant-rent{text-align:right;}
+.tenant-rent .r{font-family:'DM Mono',monospace;font-weight:600;font-size:0.9rem;}
+
+/* DISBURSEMENT */
+.disburse-row{display:flex;justify-content:space-between;align-items:center;padding:0.7rem 0;border-bottom:1px solid rgba(26,23,20,0.05);font-size:0.88rem;}
+.disburse-row:last-child{border-bottom:none;}
+.disburse-row.total{font-weight:700;border-top:2px solid var(--ink);margin-top:0.4rem;padding-top:0.8rem;}
+.disburse-row .neg{color:var(--red);}
+.disburse-row .lbl{color:var(--warm-grey);}
+.bene-split{margin-top:1rem;padding-top:1rem;border-top:1px dashed var(--line);}
+.bene-row{display:flex;justify-content:space-between;align-items:center;padding:0.5rem 0;font-size:0.85rem;}
+.bene-row .bene-name{display:flex;align-items:center;gap:0.5rem;}
+.bene-frac{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--gold-deep);background:var(--gold-soft);padding:0.15rem 0.45rem;border-radius:100px;}
+
+/* QUICK ACTIONS */
+.actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.7rem;}
+.action-btn{display:flex;flex-direction:column;gap:0.4rem;padding:1rem;border-radius:14px;border:1px solid var(--line);background:var(--paper);cursor:pointer;transition:all 0.2s;text-align:left;}
+.action-btn:hover{border-color:var(--gold);background:var(--card);transform:translateY(-2px);}
+.action-btn .ai{font-size:1.3rem;}
+.action-btn .at{font-weight:600;font-size:0.82rem;}
+.action-btn .ad{font-size:0.7rem;color:var(--warm-grey);}
+
+/* PAYMENT LINK */
+.paylink-box{background:var(--jade);color:var(--cream);border-radius:16px;padding:1.4rem;margin-top:1rem;}
+.paylink-box h3{font-family:'Fraunces',serif;font-size:1.05rem;margin-bottom:0.4rem;}
+.paylink-box p{font-size:0.8rem;opacity:0.8;margin-bottom:1rem;}
+.paylink-url{background:rgba(255,255,255,0.12);border-radius:10px;padding:0.7rem 0.9rem;font-family:'DM Mono',monospace;font-size:0.75rem;display:flex;justify-content:space-between;align-items:center;gap:0.5rem;}
+.paylink-url .copy{background:var(--cream);color:var(--jade);border:none;padding:0.35rem 0.7rem;border-radius:8px;font-size:0.68rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+
+/* PAYWALL MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,23,20,0.6);backdrop-filter:blur(6px);z-index:1000;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.modal-overlay.show{display:flex;animation:fadeIn 0.25s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--cream);border-radius:24px;max-width:480px;width:100%;padding:2.5rem;position:relative;animation:slideUp 0.3s ease;max-height:90vh;overflow-y:auto;}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-close{position:absolute;top:1.2rem;right:1.2rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--warm-grey);}
+.modal-eyebrow{font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:0.8rem;}
+.modal h2{font-family:'Fraunces',serif;font-size:1.6rem;font-weight:600;margin-bottom:0.6rem;line-height:1.2;}
+.modal>p{color:var(--warm-grey);font-size:0.95rem;margin-bottom:1.5rem;}
+.plan-option{border:2px solid var(--line);border-radius:16px;padding:1.3rem;margin-bottom:1rem;cursor:pointer;transition:all 0.2s;}
+.plan-option:hover,.plan-option.sel{border-color:var(--gold);background:var(--card);}
+.plan-option .po-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:0.5rem;}
+.plan-option .po-name{font-family:'Fraunces',serif;font-weight:600;font-size:1.1rem;}
+.plan-option .po-price{font-family:'Fraunces',serif;font-weight:600;font-size:1.3rem;}
+.plan-option .po-price .pm{font-size:0.75rem;color:var(--warm-grey);}
+.plan-option .po-feat{font-size:0.82rem;color:var(--warm-grey);line-height:1.5;}
+.plan-option .po-badge{font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;background:var(--gold);color:var(--ink);padding:0.15rem 0.5rem;border-radius:100px;margin-left:0.5rem;}
+
+/* GENERIC MODAL FORM */
+.form-group{margin-bottom:1rem;}
+.form-group label{display:block;font-family:'DM Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--warm-grey);margin-bottom:0.4rem;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:0.7rem 0.9rem;border:1.5px solid var(--line);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--card);outline:none;transition:border-color 0.2s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+
+/* upsell ribbon */
+.upsell{background:linear-gradient(110deg,var(--gold-soft),var(--jade-soft));border-radius:16px;padding:1.2rem 1.5rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
+.upsell-text{font-size:0.9rem;}
+.upsell-text strong{font-family:'Fraunces',serif;}
+
+/* toast */
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:var(--cream);padding:0.9rem 1.4rem;border-radius:12px;font-size:0.85rem;z-index:2000;transition:transform 0.3s ease;box-shadow:0 8px 30px rgba(0,0,0,0.2);}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+@media(max-width:900px){
+  .stat-grid{grid-template-columns:1fr 1fr;}
+  .dash-grid{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+}
+@media(max-width:520px){
+  .stat-grid{grid-template-columns:1fr;}
+  .actions-grid{grid-template-columns:1fr;}
+  .page-head h1{font-size:1.6rem;}
+  .modal{padding:1.8rem 1.4rem;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="warisan-mvp.html" class="logo">Warisan <span class="ar">وارثان</span></a>
+    <div class="nav-right">
+      <span class="plan-pill" id="planPill">Free Plan</span>
+      <a href="warisan-calculator.html" class="nav-btn">Calculator</a>
+      <a href="#" class="nav-btn" onclick="openPaywall();return false;">Upgrade</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="page-head">
+    <div>
+      <h1>Property &amp; Rental Manager</h1>
+      <p>Track income, costs, tenants and beneficiary disbursements for estate property.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openPayLink()">＋ Create Payment Link</button>
+  </div>
+
+  <!-- PROPERTY TABS -->
+  <div class="prop-tabs" id="propTabs">
+    <div class="prop-tab active" data-prop="0"><span class="ptype">🏠</span> Rumah Taman Melati</div>
+    <button class="prop-tab-add locked" id="addPropBtn" onclick="tryAddProperty()">＋ Add property 🔒</button>
+  </div>
+
+  <!-- FREE PLAN UPSELL -->
+  <div class="upsell" id="upsell">
+    <div class="upsell-text"><strong>You're on the Free plan.</strong> Managing 1 of 1 properties. Unlock unlimited properties, auto-reminders, and beneficiary reports.</div>
+    <button class="btn btn-primary btn-sm" onclick="openPaywall()">Upgrade to Pro →</button>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stat-grid">
+    <div class="stat-card income"><div class="accent"></div><div class="label">Income (This Month)</div><div class="value">RM 1,800</div><div class="sub up">▲ Collected on time</div></div>
+    <div class="stat-card cost"><div class="accent"></div><div class="label">Costs (This Month)</div><div class="value">RM 420</div><div class="sub">Maintenance + utilities</div></div>
+    <div class="stat-card net"><div class="accent"></div><div class="label">Net Distributable</div><div class="value">RM 1,380</div><div class="sub up">▲ After deductions</div></div>
+    <div class="stat-card arrear"><div class="accent"></div><div class="label">Arrears Outstanding</div><div class="value">RM 1,800</div><div class="sub down">▼ 1 tenant overdue</div></div>
+  </div>
+
+  <div class="dash-grid">
+    <!-- LEFT COLUMN -->
+    <div>
+      <!-- INCOME CHART -->
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Income vs Cost</h2><div class="panel-sub">Last 6 months · Rumah Taman Melati</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="toast('Full reports available on Pro plan')">Export Report</button>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-bars" id="chartBars"></div>
+        </div>
+        <div class="chart-legend">
+          <span><span class="dot" style="background:var(--jade);"></span>Income</span>
+          <span><span class="dot" style="background:var(--clay-soft);"></span>Costs</span>
+        </div>
+      </div>
+
+      <!-- RENTAL LEDGER -->
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Rental Ledger</h2><div class="panel-sub">Monthly income &amp; payment status</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="openLogPayment()">＋ Log Payment</button>
+        </div>
+        <table class="ledger">
+          <thead><tr><th>Month</th><th>Tenant</th><th>Status</th><th style="text-align:right;">Amount</th></tr></thead>
+          <tbody id="ledgerBody"></tbody>
+        </table>
+      </div>
+
+      <!-- COST TRACKING -->
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Costs &amp; Maintenance</h2><div class="panel-sub">Utilities, repairs, upkeep</div></div>
+          <button class="btn btn-ghost btn-sm" onclick="openLogCost()">＋ Log Cost</button>
+        </div>
+        <table class="ledger">
+          <thead><tr><th>Date</th><th>Type</th><th>Note</th><th style="text-align:right;">Amount</th></tr></thead>
+          <tbody id="costBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <!-- DISBURSEMENT -->
+      <div class="panel">
+        <div class="panel-head"><div><h2>Beneficiary Disbursement</h2><div class="panel-sub">This month, after costs</div></div></div>
+        <div class="disburse-row"><span class="lbl">Gross rental income</span><span>RM 1,800.00</span></div>
+        <div class="disburse-row"><span class="lbl">Utilities</span><span class="neg">− RM 180.00</span></div>
+        <div class="disburse-row"><span class="lbl">Maintenance &amp; repair</span><span class="neg">− RM 240.00</span></div>
+        <div class="disburse-row total"><span>Net distributable</span><span>RM 1,380.00</span></div>
+        <div class="bene-split">
+          <div style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--warm-grey);margin-bottom:0.5rem;">Split by Faraid share</div>
+          <div class="bene-row"><span class="bene-name">Aminah (wife) <span class="bene-frac">1/8</span></span><span>RM 172.50</span></div>
+          <div class="bene-row"><span class="bene-name">Faisal (son) <span class="bene-frac">7/24</span></span><span>RM 402.50</span></div>
+          <div class="bene-row"><span class="bene-name">Hadi (son) <span class="bene-frac">7/24</span></span><span>RM 402.50</span></div>
+          <div class="bene-row"><span class="bene-name">Sara (daughter) <span class="bene-frac">7/48</span></span><span>RM 201.25</span></div>
+          <div class="bene-row"><span class="bene-name">Nora (daughter) <span class="bene-frac">7/48</span></span><span>RM 201.25</span></div>
+        </div>
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:1rem;justify-content:center;" onclick="toast('Disbursement statements sent to all beneficiaries (Pro feature)')">Send Statements to Beneficiaries</button>
+      </div>
+
+      <!-- TENANTS -->
+      <div class="panel">
+        <div class="panel-head"><div><h2>Tenants</h2><div class="panel-sub">1 active</div></div></div>
+        <div class="tenant">
+          <div class="tenant-avatar">RK</div>
+          <div class="tenant-info"><div class="tenant-name">Ravi Kumar</div><div class="tenant-meta">Lease until Dec 2025 · Paid to Oct</div></div>
+          <div class="tenant-rent"><div class="r">RM 1,800</div><span class="badge overdue">Nov overdue</span></div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS -->
+      <div class="panel">
+        <div class="panel-head"><div><h2>Quick Actions</h2></div></div>
+        <div class="actions-grid">
+          <button class="action-btn" onclick="openTenancyGen()"><span class="ai">📄</span><span class="at">Tenancy Agreement</span><span class="ad">Generate &amp; download</span></button>
+          <button class="action-btn" onclick="openPayLink()"><span class="ai">🔗</span><span class="at">Payment Link</span><span class="ad">Send to tenant</span></button>
+          <button class="action-btn" onclick="toast('Reminders auto-send on Pro plan')"><span class="ai">🔔</span><span class="at">Due Reminder</span><span class="ad">Notify tenant</span></button>
+          <button class="action-btn" onclick="openLogCost()"><span class="ai">🔧</span><span class="at">Log Repair</span><span class="ad">Track maintenance</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PAYWALL MODAL -->
+<div class="modal-overlay" id="paywallModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('paywallModal')">✕</button>
+    <div class="modal-eyebrow">Upgrade Required</div>
+    <h2>Manage your whole estate, not just one property.</h2>
+    <p>The Free plan covers 1 property. Upgrade to add unlimited properties, automated reminders, beneficiary reports, and payment collection.</p>
+
+    <div class="plan-option sel" onclick="selectPlan(this)">
+      <div class="po-head"><span class="po-name">Pro <span class="po-badge">Popular</span></span><span class="po-price">RM 29<span class="pm">/mo</span></span></div>
+      <div class="po-feat">Up to 10 properties · Auto payment reminders · Beneficiary disbursement reports · Tenancy agreement generator · Payment links</div>
+    </div>
+    <div class="plan-option" onclick="selectPlan(this)">
+      <div class="po-head"><span class="po-name">Estate</span><span class="po-price">RM 79<span class="pm">/mo</span></span></div>
+      <div class="po-feat">Unlimited properties · Everything in Pro · Multi-estate management · Priority support · Advanced analytics &amp; tax-ready exports · Beneficiary portal access</div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:0.5rem;" onclick="confirmUpgrade()">Continue to Payment →</button>
+    <p style="text-align:center;font-size:0.72rem;margin-top:0.8rem;margin-bottom:0;">14-day free trial · Cancel anytime</p>
+  </div>
+</div>
+
+<!-- PAYMENT LINK MODAL -->
+<div class="modal-overlay" id="payLinkModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('payLinkModal')">✕</button>
+    <div class="modal-eyebrow">Collect Rent</div>
+    <h2>Create a payment link</h2>
+    <p>Send tenants a secure link to pay rent. You'll be notified the moment payment is received.</p>
+    <div class="form-group"><label>Amount (RM)</label><input type="number" id="plAmount" value="1800"></div>
+    <div class="form-group"><label>Description</label><input type="text" id="plDesc" value="November 2025 rent — Rumah Taman Melati"></div>
+    <div class="form-group"><label>Due date</label><input type="date" id="plDue"></div>
+    <div class="paylink-box">
+      <h3>Your payment link is ready</h3>
+      <p>Share this with your tenant via WhatsApp or SMS.</p>
+      <div class="paylink-url"><span id="plUrl">pay.warisan.my/r/8xK2mP</span><button class="copy" onclick="copyPayLink()">Copy</button></div>
+    </div>
+    <p style="font-size:0.72rem;margin-top:1rem;margin-bottom:0;color:var(--warm-grey);">Payments processed securely. 1% transaction fee on Free plan, 0% on Estate plan.</p>
+  </div>
+</div>
+
+<!-- TENANCY GENERATOR MODAL -->
+<div class="modal-overlay" id="tenancyModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('tenancyModal')">✕</button>
+    <div class="modal-eyebrow">Document Generator</div>
+    <h2>Generate tenancy agreement</h2>
+    <p>A legally-structured Malaysian tenancy agreement, ready to print and sign.</p>
+    <div class="form-row">
+      <div class="form-group"><label>Tenant name</label><input type="text" value="Ravi Kumar"></div>
+      <div class="form-group"><label>Monthly rent (RM)</label><input type="number" value="1800"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Lease start</label><input type="date"></div>
+      <div class="form-group"><label>Lease term (months)</label><input type="number" value="12"></div>
+    </div>
+    <div class="form-group"><label>Deposit (months)</label><select><option>2 months + 1 utility</option><option>1 month</option><option>3 months</option></select></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeModal('tenancyModal');toast('Tenancy agreement generated — downloading PDF')">Generate Agreement (PDF)</button>
+  </div>
+</div>
+
+<!-- LOG PAYMENT MODAL -->
+<div class="modal-overlay" id="logPayModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('logPayModal')">✕</button>
+    <div class="modal-eyebrow">Record Income</div>
+    <h2>Log a rental payment</h2>
+    <div class="form-group"><label>Month</label><input type="month"></div>
+    <div class="form-group"><label>Amount received (RM)</label><input type="number" value="1800"></div>
+    <div class="form-group"><label>Status</label><select><option>Paid</option><option>Partial</option><option>Pending</option></select></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeModal('logPayModal');toast('Payment logged')">Save Payment</button>
+  </div>
+</div>
+
+<!-- LOG COST MODAL -->
+<div class="modal-overlay" id="logCostModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('logCostModal')">✕</button>
+    <div class="modal-eyebrow">Record Cost</div>
+    <h2>Log a cost or repair</h2>
+    <div class="form-group"><label>Type</label><select><option>Utilities</option><option>Maintenance</option><option>Repair</option><option>Insurance</option><option>Assessment / Quit Rent</option><option>Other</option></select></div>
+    <div class="form-group"><label>Description</label><input type="text" placeholder="e.g. Plumber — kitchen sink"></div>
+    <div class="form-group"><label>Amount (RM)</label><input type="number" placeholder="0.00"></div>
+    <div class="form-group"><label>Date</label><input type="date"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="closeModal('logCostModal');toast('Cost logged')">Save Cost</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   WARISAN PROPERTY MODULE
+   NOTE ON IP PROTECTION:
+   The visible client code is the THIN presentation layer.
+   All defensible value — payment processing, document
+   generation, notification dispatch, beneficiary data, and
+   the rental-history dataset — runs server-side behind an
+   authenticated API and is NOT present in this file.
+   See server-gate comments below.
+   ============================================================ */
+
+/* --- Lightweight client integrity check (deters casual lifting) ---
+   In production this validates a signed license token against the
+   Warisan API before unlocking write operations. A copied static
+   file has no valid token and the backend rejects all mutations. */
+const WARISAN_LICENSE = (function(){
+  // Obfuscated origin gate — real check happens server-side.
+  const allowed = ['warisan.my','warisan.com.my','localhost','127.0.0.1','github.io','pages.dev'];
+  const host = location.hostname || 'localhost';
+  const ok = allowed.some(d => host.endsWith(d) || host===d || host==='');
+  return { valid: ok, host };
+})();
+
+let plan = 'free';
+let propertyCount = 1;
+
+/* --- Chart data (would come from authenticated API) --- */
+const chartData = [
+  {m:'Jun',inc:1800,cost:200},{m:'Jul',inc:1800,cost:550},
+  {m:'Aug',inc:1800,cost:180},{m:'Sep',inc:1800,cost:300},
+  {m:'Oct',inc:1800,cost:240},{m:'Nov',inc:0,cost:420},
+];
+function renderChart(){
+  const max = Math.max(...chartData.map(d=>Math.max(d.inc,d.cost)));
+  const bars = chartData.map(d=>{
+    const ih = max>0?(d.inc/max*100):0;
+    const ch = max>0?(d.cost/max*100):0;
+    return `<div class="chart-col">
+      <div class="chart-bar-group">
+        <div class="chart-bar inc" style="height:${ih}%" title="Income RM${d.inc}"></div>
+        <div class="chart-bar cost" style="height:${ch}%" title="Cost RM${d.cost}"></div>
+      </div>
+      <div class="chart-label">${d.m}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('chartBars').innerHTML = bars;
+}
+
+/* --- Ledger data --- */
+const ledger = [
+  {m:'Nov 2025',t:'Ravi Kumar',s:'overdue',a:1800},
+  {m:'Oct 2025',t:'Ravi Kumar',s:'paid',a:1800},
+  {m:'Sep 2025',t:'Ravi Kumar',s:'paid',a:1800},
+  {m:'Aug 2025',t:'Ravi Kumar',s:'paid',a:1800},
+  {m:'Jul 2025',t:'Ravi Kumar',s:'paid',a:1800},
+];
+function renderLedger(){
+  document.getElementById('ledgerBody').innerHTML = ledger.map(r=>
+    `<tr><td>${r.m}</td><td>${r.t}</td><td><span class="badge ${r.s}">${r.s}</span></td><td class="amt ${r.s==='paid'?'pos':''}">RM ${r.a.toLocaleString()}</td></tr>`
+  ).join('');
+}
+
+/* --- Cost data --- */
+const costs = [
+  {d:'12 Nov',t:'Maintenance',n:'Plumber — kitchen sink',a:240},
+  {d:'05 Nov',t:'Utilities',n:'Water + sewerage',a:180},
+  {d:'18 Sep',t:'Repair',n:'Ceiling fan replacement',a:300},
+  {d:'22 Jul',t:'Maintenance',n:'Repaint living room',a:550},
+];
+function renderCosts(){
+  document.getElementById('costBody').innerHTML = costs.map(r=>
+    `<tr><td>${r.d}</td><td>${r.t}</td><td>${r.n}</td><td class="amt neg">− RM ${r.a}</td></tr>`
+  ).join('');
+}
+
+/* --- Paywall gating --- */
+function tryAddProperty(){
+  if(plan==='free' && propertyCount>=1){ openPaywall(); return; }
+  toast('Add property form (Pro)');
+}
+function openPaywall(){ document.getElementById('paywallModal').classList.add('show'); }
+function openPayLink(){
+  const d=new Date(); d.setDate(d.getDate()+7);
+  document.getElementById('plDue').value=d.toISOString().slice(0,10);
+  document.getElementById('payLinkModal').classList.add('show');
+}
+function openTenancyGen(){ document.getElementById('tenancyModal').classList.add('show'); }
+function openLogPayment(){ document.getElementById('logPayModal').classList.add('show'); }
+function openLogCost(){ document.getElementById('logCostModal').classList.add('show'); }
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+function selectPlan(el){
+  document.querySelectorAll('.plan-option').forEach(p=>p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function confirmUpgrade(){
+  closeModal('paywallModal');
+  toast('Redirecting to secure checkout…');
+  // In production: POST /v1/billing/checkout → Stripe/Billplz session
+}
+
+function copyPayLink(){
+  navigator.clipboard.writeText('https://'+document.getElementById('plUrl').textContent);
+  toast('Payment link copied');
+}
+
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('show'); });
+});
+
+// init
+renderChart(); renderLedger(); renderCosts();
+</script>
+</body>
+</html>

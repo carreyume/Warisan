@@ -8,11 +8,28 @@
 
 ## Live Pages
 
+### Customer-Facing (Product)
+
+| Page | Description |
+|------|-------------|
+| [**Landing / MVP**](warisan-mvp.html) | Customer-facing landing page for families settling an estate — problem, how it works, freemium pricing |
+| [**Distribution Calculator**](warisan-calculator.html) | Interactive Faraid & civil intestate calculator with trilingual support (EN / BM / AR) and non-liquid asset ledger (Mode A/B/C) |
+| [**Property & Rental Manager**](warisan-property.html) | Freemium rental management module — income/cost tracking, tenant management, beneficiary disbursement, payment links, tenancy agreement generator |
+
+### Institutional / Vision
+
 | Page | Description |
 |------|-------------|
 | [**System Concept**](warisan-concept.html) | Full system design brief — architecture, dual-track compliance, illiquid asset resolution, partner ecosystem, revenue model, and investment thesis |
-| [**Distribution Calculator**](warisan-calculator.html) | Interactive Faraid & civil intestate calculator with trilingual support (EN / BM / AR) and non-liquid asset ledger (Mode A/B/C) |
 | [**API Reference**](warisan-api.html) | Developer documentation for all 18 REST endpoints across Identity, Estate, Asset Registry, Distribution Engine, SBT Settlement, and Institutional API layers |
+
+### Strategy Documents (not deployed — internal reference)
+
+| Document | Description |
+|----------|-------------|
+| `warisan-strategy.md` | Defensibility/moat strategy + twice-a-month feature pipeline |
+| `warisan-launch-sequence.md` | Phased launch sequence ordered by cost-vs-revenue |
+| `warisan-deck.pdf` / `.pptx` | 14-slide investor/partner presentation |
 
 ---
 
@@ -37,11 +54,16 @@ Warisan is a consortium-chain estate resolution protocol designed to solve this 
 
 ```
 warisan/
-├── index.html                  # Landing page
-├── warisan-concept.html        # System design brief
-├── warisan-calculator.html     # Distribution calculator (EN / BM / AR)
-├── warisan-api.html            # API reference documentation
-└── README.md                   # This file
+├── index.html                    # Site entry / link hub
+├── warisan-mvp.html              # Customer-facing landing page
+├── warisan-calculator.html       # Distribution calculator (EN / BM / AR)
+├── warisan-property.html         # Property & rental manager (freemium)
+├── warisan-concept.html          # System design brief (vision)
+├── warisan-api.html              # API reference documentation
+├── warisan-deck.pdf / .pptx      # 14-slide presentation
+├── warisan-strategy.md           # Moat + feature pipeline (internal)
+├── warisan-launch-sequence.md    # Phased launch plan (internal)
+└── README.md                     # This file
 ```
 
 All files are self-contained HTML — no build step, no dependencies, no server required. Deploy directly via GitHub Pages or Cloudflare Pages.
